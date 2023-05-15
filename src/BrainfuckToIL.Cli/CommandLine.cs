@@ -1,12 +1,11 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Builder;
-using System.CommandLine.Parsing;
 
 namespace BrainfuckToIL.Cli;
 
 public static class CommandLine
 {
-    public static Parser GetParser(RootCommand rootCommand)
+    public static CommandLineParser GetParser(RootCommand rootCommand)
     {
         var builder = new CommandLineBuilder(rootCommand);
         
