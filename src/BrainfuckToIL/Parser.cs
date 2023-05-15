@@ -2,6 +2,9 @@
 
 namespace BrainfuckToIL;
 
+/// <summary>
+/// A parser from a sequence of characters to a series of instructions.
+/// </summary>
 public sealed class Parser
 {
     private readonly record struct InstructionArray(
@@ -19,6 +22,11 @@ public sealed class Parser
         position = 0;
     }
 
+    /// <summary>
+    /// Parses a sequence of instructions.
+    /// </summary>
+    /// <param name="input">The input to parse. Should be finite.</param>
+    /// <returns>An immutable array of instructions.</returns>
     public static ImmutableArray<Instruction> Parse(IEnumerable<char> input)
     {
         using var enumerator = input.GetEnumerator();
