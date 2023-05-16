@@ -207,7 +207,7 @@ public sealed class Emitter
         var il = new InstructionEncoder(codeBuilder, flowBuilder);
         
         // Let the magic happen!
-        InstructionEmitter.Emit(metadata, il, GetTypes());
+        InstructionEmitter.Emit(instructions, metadata, il, GetTypes());
 
         var mainBodyOffset = methodBodyStream.AddMethodBody(il);
         codeBuilder.Clear();
