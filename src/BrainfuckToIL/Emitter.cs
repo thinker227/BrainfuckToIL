@@ -62,7 +62,7 @@ public sealed class Emitter
         MethodDefinitionHandle entryPoint)
     {
         var peHeaderBuilder = new PEHeaderBuilder(
-            imageCharacteristics: Characteristics.Dll);
+            imageCharacteristics: Characteristics.ExecutableImage);
 
         var peBuilder = new ManagedPEBuilder(
             peHeaderBuilder,
