@@ -7,31 +7,67 @@ namespace BrainfuckToIL;
 /// </summary>
 public sealed class Parser
 {
+    /// <summary>
+    /// The result of a parse operation.
+    /// </summary>
+    /// <param name="Instruction">The instruction which was produced.</param>
+    /// <param name="MoveNext">Whether to continue to the next character of input or remain on the current one.</param>
     private readonly record struct CharParseResult(
         Instruction? Instruction,
         bool MoveNext)
     {
+        /// <summary>
+        /// A <see cref="CharParseResult"/> which discards the current character.
+        /// </summary>
         public static CharParseResult Discard { get; } = new(null, true);
     }
     
+    /// <summary>
+    /// An array of instructions.
+    /// </summary>
+    /// <param name="Instructions">A mutable builder for the instructions.</param>
+    /// <param name="StartPosition">The start position in the input of the array.</param>
     private readonly record struct InstructionArray(
         ImmutableArray<Instruction>.Builder Instructions,
         int? StartPosition);
     
+    /// <summary>
+    /// The kind of a sequential instruction.
+    /// </summary>
     private enum SequentialKind
     {
         Move,
         Arithmetic
     }
 
+    /// <summary>
+    /// An accumulative sequential instruction. 
+    /// </summary>
+    /// <param name="Kind">The kind of the instruction.</param>
+    /// <param name="Value">The accumulative value of the instruction.</param>
     private record struct SequentialInstruction(SequentialKind Kind, int Value)
     {
         public SequentialKind Kind { get; } = Kind;
     }
     
     private readonly IEnumerator<char> input;
-    private readonly Stack<InstructionArray> instructionsStack;
+    
+    /// <summary>
+    /// The current position in the input.
+    /// </summary>
     private int position;
+    
+    /// <summary>
+    /// A stack of instruction arrays to which new elements are pushed
+    /// when entering a nested context such as a loop.
+    /// </summary>
+    private readonly Stack<InstructionArray> instructionsStack;
+
+    /// <summary>
+    /// Keeps track of the current sequential instruction, i.e. if there has previously been a
+    /// <c>&gt;</c>, <c>&lt;</c>, <c>+</c>, or <c>-</c> instruction and the parser is currently
+    /// trying to accumulate the remaining similar instructions.
+    /// </summary>
     private SequentialInstruction? sequentialInstruction;
 
     private Parser(IEnumerator<char> input)
@@ -54,6 +90,10 @@ public sealed class Parser
         return parser.Parse();
     }
 
+    /// <summary>
+    /// Parses all characters in the input.
+    /// </summary>
+    /// <returns>The parsed instructions.</returns>
     private ImmutableArray<Instruction> Parse()
     {
         instructionsStack.Push(new(
@@ -97,6 +137,11 @@ public sealed class Parser
         return instructionsStack.Pop().Instructions.ToImmutable();
     }
 
+    /// <summary>
+    /// Parses a single character, possibly updating the state of the parser.
+    /// </summary>
+    /// <param name="c">The character to parse.</param>
+    /// <returns>The result of the parsing operation.</returns>
     private CharParseResult ParseChar(char c)
     {
         if (sequentialInstruction is not null && GetSequentialKind(c) != sequentialInstruction.Value.Kind)
@@ -113,6 +158,13 @@ public sealed class Parser
         return CharParseResult.Discard;
     }
 
+    /// <summary>
+    /// Tries to parse a simple instruction,
+    /// i.e. an instruction which does not require any special logic.
+    /// </summary>
+    /// <param name="c">The character to parse.</param>
+    /// <returns>An instruction created from the character,
+    /// or <see langword="null"/> if the character could not be parsed as a simple instruction.</returns>
     private static Instruction? ParseSimple(char c) => c switch
     {
         '.' => new Instruction.Output(),
@@ -120,6 +172,11 @@ public sealed class Parser
         _ => null
     };
 
+    /// <summary>
+    /// Tries to finish the current sequential instruction.
+    /// </summary>
+    /// <returns>The created sequential instruction,
+    /// or <see langword="null"/> if the total accumulated value of the instruction is 0.</returns>
     private Instruction? FinishSequentialInstruction()
     {
         if (sequentialInstruction is null) throw new InvalidOperationException(
@@ -138,6 +195,12 @@ public sealed class Parser
         };
     }
 
+    /// <summary>
+    /// Tries to parse a sequential instruction by either continuing
+    /// the current sequential instruction or by creating a new one.
+    /// </summary>
+    /// <param name="c">The character to parse.</param>
+    /// <returns>Whether a sequential instruction could be parsed from the character.</returns>
     private bool ParseSequential(char c)
     {
         if (GetSequentialKind(c) is not SequentialKind kind) return false;
@@ -162,6 +225,10 @@ public sealed class Parser
         return true;
     }
 
+    /// <summary>
+    /// Gets the kind of a sequential instruction from a character.
+    /// </summary>
+    /// <param name="c">The character to get the kind from.</param>
     private static SequentialKind? GetSequentialKind(char c) => c switch
     {
         '>' or '<' => SequentialKind.Move,
@@ -169,6 +236,11 @@ public sealed class Parser
         _ => null
     };
     
+    /// <summary>
+    /// Gets the sequential value of a character,
+    /// i.e. whether it's an increment/move right or decrement/move left.
+    /// </summary>
+    /// <param name="c">The character to get the value of.</param>
     private static int GetSequentialValue(char c) => c switch
     {
         '>' or '+' => 1,
@@ -177,6 +249,11 @@ public sealed class Parser
             "Invalid character for sequential instruction.")
     };
 
+    /// <summary>
+    /// Tries to parse a loop start by pushing a new context to the instructions stack.
+    /// </summary>
+    /// <param name="c">The character to parse.</param>
+    /// <returns>Whether the character is a loop start.</returns>
     private bool ParseLoopStart(char c)
     {
         if (c is not '[') return false;
@@ -188,6 +265,13 @@ public sealed class Parser
         return true;
     }
 
+    /// <summary>
+    /// Tries to parse a loop ending by popping the instructions stack
+    /// and returning the accumulated instructions.
+    /// </summary>
+    /// <param name="c">The character to parse.</param>
+    /// <returns>The parsed loop instruction,
+    /// or <see langword="null"/> if the character is not a loop ending.</returns>
     private Instruction? ParseLoopEnd(char c)
     {
         if (c is not ']') return null;
