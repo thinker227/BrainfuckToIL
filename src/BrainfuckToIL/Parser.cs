@@ -7,19 +7,39 @@ namespace BrainfuckToIL;
 /// </summary>
 public sealed class Parser
 {
+    private readonly record struct CharParseResult(
+        Instruction? Instruction,
+        bool MoveNext)
+    {
+        public static CharParseResult Discard { get; } = new(null, true);
+    }
+    
     private readonly record struct InstructionArray(
         ImmutableArray<Instruction>.Builder Instructions,
         int? StartPosition);
     
+    private enum SequentialKind
+    {
+        Move,
+        Arithmetic
+    }
+
+    private record struct SequentialInstruction(SequentialKind Kind, int Value)
+    {
+        public SequentialKind Kind { get; } = Kind;
+    }
+    
     private readonly IEnumerator<char> input;
     private readonly Stack<InstructionArray> instructionsStack;
     private int position;
+    private SequentialInstruction? sequentialInstruction;
 
     private Parser(IEnumerator<char> input)
     {
         this.input = input;
         instructionsStack = new();
         position = 0;
+        sequentialInstruction = null;
     }
 
     /// <summary>
@@ -40,15 +60,19 @@ public sealed class Parser
             ImmutableArray.CreateBuilder<Instruction>(),
             null));
 
-        while (input.MoveNext())
+        var moveNext = true;
+        
+        while (!moveNext || input.MoveNext())
         {
-            var ast = ParseChar(input.Current);
-            position++;
+            var result = ParseChar(input.Current);
             
-            if (ast is null) continue;
+            moveNext = result.MoveNext;
+            if (moveNext) position++;
+
+            if (result.Instruction is null) continue;
             
             // Assuming stack is never empty, in which case parsing has gone awry.
-            instructionsStack.Peek().Instructions.Add(ast);
+            instructionsStack.Peek().Instructions.Add(result.Instruction);
         }
 
         switch (instructionsStack.Count)
@@ -73,26 +97,84 @@ public sealed class Parser
         return instructionsStack.Pop().Instructions.ToImmutable();
     }
 
-    private Instruction? ParseChar(char c)
+    private CharParseResult ParseChar(char c)
     {
-        if (ParseSimple(c) is Instruction simple) return simple;
-
-        if (ParseLoopStart(c)) return null;
-
-        if (ParseLoopEnd(c) is Instruction loopEnd) return loopEnd;
+        if (sequentialInstruction is not null && GetSequentialKind(c) != sequentialInstruction.Value.Kind)
+            return new(FinishSequentialInstruction(), false);
         
-        return null;
+        if (ParseSequential(c)) return CharParseResult.Discard;
+
+        if (ParseSimple(c) is Instruction simple) return new(simple, true);
+
+        if (ParseLoopStart(c)) return CharParseResult.Discard;
+
+        if (ParseLoopEnd(c) is Instruction loopEnd) return new(loopEnd, true);
+        
+        return CharParseResult.Discard;
     }
 
     private static Instruction? ParseSimple(char c) => c switch
     {
-        '>' => new Instruction.MoveRight(),
-        '<' => new Instruction.MoveLeft(),
-        '+' => new Instruction.Increment(),
-        '-' => new Instruction.Decrement(),
         '.' => new Instruction.Output(),
         ',' => new Instruction.Input(),
         _ => null
+    };
+
+    private Instruction? FinishSequentialInstruction()
+    {
+        if (sequentialInstruction is null) throw new InvalidOperationException(
+            "Attempted to finish a sequential instruction which was null.");
+        
+        if (sequentialInstruction is { Value: 0 }) return null;
+        
+        var seq = sequentialInstruction.Value;
+        sequentialInstruction = null;
+        
+        return seq.Kind switch
+        {
+            SequentialKind.Move => new Instruction.Move(seq.Value),
+            SequentialKind.Arithmetic => new Instruction.Arithmetic(seq.Value),
+            _ => throw new UnreachableException()
+        };
+    }
+
+    private bool ParseSequential(char c)
+    {
+        if (GetSequentialKind(c) is not SequentialKind kind) return false;
+        var value = GetSequentialValue(c);
+        
+        if (sequentialInstruction is null)
+        {
+            sequentialInstruction = new(kind, value);
+            return true;
+        }
+        
+        var seq = sequentialInstruction.Value;
+        
+        if (seq.Kind != kind) throw new InvalidOperationException(
+            "Mismatched sequential instruction kinds.");
+        
+        sequentialInstruction = seq with
+        {
+            Value = seq.Value + value
+        };
+
+        return true;
+    }
+
+    private static SequentialKind? GetSequentialKind(char c) => c switch
+    {
+        '>' or '<' => SequentialKind.Move,
+        '+' or '-' => SequentialKind.Arithmetic,
+        _ => null
+    };
+    
+    private static int GetSequentialValue(char c) => c switch
+    {
+        '>' or '+' => 1,
+        '<' or '-' => -1,
+        _ => throw new InvalidOperationException(
+            "Invalid character for sequential instruction.")
     };
 
     private bool ParseLoopStart(char c)
