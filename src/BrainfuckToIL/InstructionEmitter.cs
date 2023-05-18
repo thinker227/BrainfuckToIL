@@ -122,7 +122,46 @@ internal sealed class InstructionEmitter
         }
     }
 
-    private void EmitIncrement(IncrementKind kind) => throw new NotImplementedException();
+    private void EmitIncrement(IncrementKind kind)
+    {
+        // The majority of this code comes from looking at the IL of the bellow code on Sharplab
+        // and checking the decompilation of the produced IL using ILSpy.
+        /*
+        var bytes = new byte[20];
+        bytes[2] += 1;
+        */
+        
+        // Load the memory array onto the stack.
+        il.LoadLocal(MemorySlot);
+        
+        // Load the address of the element in the memory array at the index of the data pointer.
+        il.LoadLocal(DataPointerSlot);
+        il.OpCode(ILOpCode.Ldelema);
+        il.Token(types.Byte);
+        
+        // Duplicate the the address, one for the read and one for the write.
+        il.OpCode(ILOpCode.Dup);
+        
+        // Load the value at the address (?) as a byte onto the stack.
+        // u1 is an unsigned 1-byte integer, i.e. a byte.
+        il.OpCode(ILOpCode.Ldind_u1);
+        
+        // Add or subtract 1.
+        il.LoadConstantI4(1);
+        il.OpCode(kind switch
+        {
+            IncrementKind.Increment => ILOpCode.Add,
+            IncrementKind.Decrement => ILOpCode.Sub,
+            _ => throw new UnreachableException()
+        });
+        
+        // Convert the result of the addition/subtraction into a byte.
+        il.OpCode(ILOpCode.Conv_u1);
+        
+        // Store the result into the index of the memory array.
+        // Idk why this is i1 and not u1 but there exists no Stind_u1 instruction.
+        il.OpCode(ILOpCode.Stind_i1);
+    }
 
     private void EmitMove(MoveKind kind)
     {
