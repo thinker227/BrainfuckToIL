@@ -43,7 +43,8 @@ internal sealed class InstructionEmitter
         var emitter = new InstructionEmitter(instructions, metadata, il, locals, types);
         
         emitter.EmitHeader();
-        emitter.Emit();
+        emitter.EmitInstructions();
+        emitter.EmitFooter();
     }
 
     /// <summary>
@@ -76,11 +77,16 @@ internal sealed class InstructionEmitter
     }
 
     /// <summary>
+    /// Emits the footer of the method.
+    /// </summary>
+    private void EmitFooter() =>
+        il.OpCode(ILOpCode.Ret);
+
+    /// <summary>
     /// Emits the main part of the body based on <see cref="instructions"/>.
     /// </summary>
-    private void Emit()
+    private void EmitInstructions()
     {
-        il.OpCode(ILOpCode.Nop);
-        il.OpCode(ILOpCode.Ret);
+        
     }
 }
