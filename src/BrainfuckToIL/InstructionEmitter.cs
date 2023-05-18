@@ -99,20 +99,12 @@ internal sealed class InstructionEmitter
     {
         switch (instruction)
         {
-        case Instruction.Increment:
-            EmitIncrement(IncrementKind.Increment);
+        case Instruction.Arithmetic arithmetic:
+            EmitArithmetic(arithmetic.Value);
             break;
             
-        case Instruction.Decrement:
-            EmitIncrement(IncrementKind.Decrement);
-            break;
-            
-        case Instruction.MoveRight:
-            EmitMove(MoveKind.Right);
-            break;
-            
-        case Instruction.MoveLeft:
-            EmitMove(MoveKind.Left);
+        case Instruction.Move move:
+            EmitMove(move.Distance);
             break;
             
         case Instruction.Input:
@@ -129,7 +121,7 @@ internal sealed class InstructionEmitter
         }
     }
     
-    private void EmitIncrement(IncrementKind kind)
+    private void EmitArithmetic(int value)
     {
         // The majority of this code comes from looking at the IL of the bellow code on Sharplab
         // and checking the decompilation of the produced IL using ILSpy.
@@ -137,6 +129,9 @@ internal sealed class InstructionEmitter
         var bytes = new byte[20];
         bytes[2] += 1;
         */
+
+        // No need to do anything if we're not supposed to add/subtract anything.
+        if (value == 0) return;
         
         // Load the memory array onto the stack.
         il.LoadLocal(MemorySlot);
@@ -153,14 +148,8 @@ internal sealed class InstructionEmitter
         // u1 is an unsigned 1-byte integer, i.e. a byte.
         il.OpCode(ILOpCode.Ldind_u1);
         
-        // Add or subtract 1.
-        il.LoadConstantI4(1);
-        il.OpCode(kind switch
-        {
-            IncrementKind.Increment => ILOpCode.Add,
-            IncrementKind.Decrement => ILOpCode.Sub,
-            _ => throw new UnreachableException()
-        });
+        // Add or subtract.
+        EmitAddOrSubtract(value);
         
         // Convert the result of the addition/subtraction into a byte.
         il.OpCode(ILOpCode.Conv_u1);
@@ -170,29 +159,26 @@ internal sealed class InstructionEmitter
         il.OpCode(ILOpCode.Stind_i1);
     }
 
-    private void EmitMove(MoveKind kind)
+    private void EmitMove(int distance)
     {
+        // No need to do anything if we're not supposed to move anywhere.
+        if (distance == 0) return;
+        
         // Load the data pointer onto the stack.
         il.LoadLocal(DataPointerSlot);
         
         // TODO: Bounds checking.
         
-        // Add or subtract 1.
-        il.LoadConstantI4(1);
-        il.OpCode(kind switch
-        {
-            MoveKind.Right => ILOpCode.Add,
-            MoveKind.Left => ILOpCode.Sub,
-            _ => throw new UnreachableException()
-        });
+        // Add or subtract.
+        EmitAddOrSubtract(distance);
         
         // Store the result back into the data pointer.
         il.StoreLocal(DataPointerSlot);
     }
 
-    private void EmitInput() => throw new NotImplementedException();
+    private void EmitInput() {}
 
-    private void EmitOutput() => throw new NotImplementedException();
+    private void EmitOutput() {}
 
     private void EmitLoop(Instruction.Loop loop)
     {
@@ -230,5 +216,25 @@ internal sealed class InstructionEmitter
         
         // Read the element at the index specified by the data pointer.
         il.OpCode(ILOpCode.Ldelem_u1);
+    }
+
+    /// <summary>
+    /// Emits instructions for either adding or subtracting an absolute value.
+    /// </summary>
+    /// <param name="value">The value to add or subtract.</param>
+    private void EmitAddOrSubtract(int value)
+    {
+        // My only justification for this method existing is that
+        // using |value| and switching out the operation just looks neater
+        // than always adding by a positive or negative amount lmao
+        
+        il.LoadConstantI4(Math.Abs(value));
+        
+        il.OpCode(value switch
+        {
+            > 0 => ILOpCode.Add,
+            < 0 => ILOpCode.Sub,
+            _ => throw new UnreachableException()
+        });
     }
 }
