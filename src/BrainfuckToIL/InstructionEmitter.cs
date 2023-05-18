@@ -87,6 +87,60 @@ internal sealed class InstructionEmitter
     /// </summary>
     private void EmitInstructions()
     {
-        
+        foreach (var instruction in instructions)
+        {
+            switch (instruction)
+            {
+            case Instruction.Increment:
+                EmitIncrement(IncrementKind.Increment);
+                break;
+            
+            case Instruction.Decrement:
+                EmitIncrement(IncrementKind.Decrement);
+                break;
+            
+            case Instruction.MoveRight:
+                EmitMove(MoveKind.Right);
+                break;
+            
+            case Instruction.MoveLeft:
+                EmitMove(MoveKind.Left);
+                break;
+            
+            case Instruction.Input:
+                EmitInput();
+                break;
+            
+            case Instruction.Output:
+                EmitOutput();
+                break;
+            
+            case Instruction.Loop loop:
+                EmitLoop(loop);
+                break;
+            }
+        }
     }
+
+    private void EmitIncrement(IncrementKind kind) => throw new NotImplementedException();
+
+    private void EmitMove(MoveKind kind) => throw new NotImplementedException();
+
+    private void EmitInput() => throw new NotImplementedException();
+
+    private void EmitOutput() => throw new NotImplementedException();
+
+    private void EmitLoop(Instruction.Loop loop) => throw new NotImplementedException();
+}
+
+internal enum IncrementKind
+{
+    Increment,
+    Decrement
+}
+
+internal enum MoveKind
+{
+    Right,
+    Left
 }
