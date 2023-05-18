@@ -205,11 +205,15 @@ public sealed class Emitter
     {
         var flowBuilder = new ControlFlowBuilder();
         var il = new InstructionEncoder(codeBuilder, flowBuilder);
-        
-        // Let the magic happen!
-        InstructionEmitter.Emit(instructions, metadata, il, GetTypes());
 
-        var mainBodyOffset = methodBodyStream.AddMethodBody(il);
+        var localsBuilder = new BlobBuilder();
+        var locals = new BlobEncoder(localsBuilder).LocalVariableSignature(2);
+
+        // Let the magic happen!
+        InstructionEmitter.Emit(instructions, metadata, il, locals, GetTypes());
+
+        var mainBodyOffset = methodBodyStream.AddMethodBody(
+            il, localVariablesSignature: metadata.AddStandaloneSignature(metadata.GetOrAddBlob(localsBuilder)));
         codeBuilder.Clear();
 
         return mainBodyOffset;
