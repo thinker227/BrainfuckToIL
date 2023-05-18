@@ -122,7 +122,21 @@ internal sealed class InstructionEmitter
         }
     }
 
-    private void EmitIncrement(IncrementKind kind) => throw new NotImplementedException();
+    private void EmitIncrement(IncrementKind kind)
+    {
+        il.LoadLocal(DataPointerSlot);
+        
+        il.LoadConstantI4(1);
+        
+        il.OpCode(kind switch
+        {
+            IncrementKind.Increment => ILOpCode.Add,
+            IncrementKind.Decrement => ILOpCode.Sub,
+            _ => throw new UnreachableException()
+        });
+        
+        il.StoreLocal(DataPointerSlot);
+    }
 
     private void EmitMove(MoveKind kind) => throw new NotImplementedException();
 
