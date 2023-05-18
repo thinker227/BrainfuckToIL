@@ -232,15 +232,3 @@ internal sealed class InstructionEmitter
         il.OpCode(ILOpCode.Ldelem_u1);
     }
 }
-
-internal enum IncrementKind
-{
-    Increment,
-    Decrement
-}
-
-internal enum MoveKind
-{
-    Right,
-    Left
-}
