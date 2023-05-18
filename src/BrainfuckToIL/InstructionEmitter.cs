@@ -198,9 +198,12 @@ internal sealed class InstructionEmitter
     {
         // This is just a while(mem[ind] != 0) loop.
         
+        // Note: Use Br and Brtrue here instead of Br_s and Brtrue_s
+        // because loop offsets can easily exceed the bounds of a single byte. 
+        
         // Unconditionally branch to the condition.
         var condition = il.DefineLabel();
-        il.Branch(ILOpCode.Br_s, condition);
+        il.Branch(ILOpCode.Br, condition);
         
         // Define and mark the body label at the current location.
         var body = il.DefineLabel();
@@ -213,7 +216,7 @@ internal sealed class InstructionEmitter
         // Branch to the start of the body if the value at the current memory index is not 0.
         il.MarkLabel(condition);
         EmitReadCurrentMemory();
-        il.Branch(ILOpCode.Brtrue_s, body);
+        il.Branch(ILOpCode.Brtrue, body);
     }
 
     /// <summary>
