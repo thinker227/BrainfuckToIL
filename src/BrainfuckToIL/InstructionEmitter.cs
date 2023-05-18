@@ -88,40 +88,47 @@ internal sealed class InstructionEmitter
     private void EmitInstructions()
     {
         foreach (var instruction in instructions)
-        {
-            switch (instruction)
-            {
-            case Instruction.Increment:
-                EmitIncrement(IncrementKind.Increment);
-                break;
-            
-            case Instruction.Decrement:
-                EmitIncrement(IncrementKind.Decrement);
-                break;
-            
-            case Instruction.MoveRight:
-                EmitMove(MoveKind.Right);
-                break;
-            
-            case Instruction.MoveLeft:
-                EmitMove(MoveKind.Left);
-                break;
-            
-            case Instruction.Input:
-                EmitInput();
-                break;
-            
-            case Instruction.Output:
-                EmitOutput();
-                break;
-            
-            case Instruction.Loop loop:
-                EmitLoop(loop);
-                break;
-            }
-        }
+            EmitInstruction(instruction);
     }
 
+    /// <summary>
+    /// Emits a single instruction.
+    /// </summary>
+    /// <param name="instruction">The instruction to emit.</param>
+    private void EmitInstruction(Instruction instruction)
+    {
+        switch (instruction)
+        {
+        case Instruction.Increment:
+            EmitIncrement(IncrementKind.Increment);
+            break;
+            
+        case Instruction.Decrement:
+            EmitIncrement(IncrementKind.Decrement);
+            break;
+            
+        case Instruction.MoveRight:
+            EmitMove(MoveKind.Right);
+            break;
+            
+        case Instruction.MoveLeft:
+            EmitMove(MoveKind.Left);
+            break;
+            
+        case Instruction.Input:
+            EmitInput();
+            break;
+            
+        case Instruction.Output:
+            EmitOutput();
+            break;
+            
+        case Instruction.Loop loop:
+            EmitLoop(loop);
+            break;
+        }
+    }
+    
     private void EmitIncrement(IncrementKind kind)
     {
         // The majority of this code comes from looking at the IL of the bellow code on Sharplab
