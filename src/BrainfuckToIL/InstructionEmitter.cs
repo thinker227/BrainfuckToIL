@@ -194,7 +194,40 @@ internal sealed class InstructionEmitter
 
     private void EmitOutput() => throw new NotImplementedException();
 
-    private void EmitLoop(Instruction.Loop loop) => throw new NotImplementedException();
+    private void EmitLoop(Instruction.Loop loop)
+    {
+        // This is just a while(mem[ind] != 0) loop.
+        
+        // Unconditionally branch to the condition.
+        var condition = il.DefineLabel();
+        il.Branch(ILOpCode.Br_s, condition);
+        
+        // Define and mark the body label at the current location.
+        var body = il.DefineLabel();
+        il.MarkLabel(body);
+        
+        // Emit the body.
+        foreach (var instruction in loop.Instructions)
+            EmitInstruction(instruction);
+        
+        // Branch to the start of the body if the value at the current memory index is not 0.
+        il.MarkLabel(condition);
+        EmitReadCurrentMemory();
+        il.Branch(ILOpCode.Brtrue_s, body);
+    }
+
+    /// <summary>
+    /// Emits instructions to read the data at the index in memory specified by the data pointer.
+    /// </summary>
+    private void EmitReadCurrentMemory()
+    {
+        // Load the array and data pointer onto the stack.
+        il.LoadLocal(MemorySlot);
+        il.LoadLocal(DataPointerSlot);
+        
+        // Read the element at the index specified by the data pointer.
+        il.OpCode(ILOpCode.Ldelem_u1);
+    }
 }
 
 internal enum IncrementKind
