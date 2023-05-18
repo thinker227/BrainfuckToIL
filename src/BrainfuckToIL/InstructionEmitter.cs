@@ -126,10 +126,13 @@ internal sealed class InstructionEmitter
 
     private void EmitMove(MoveKind kind)
     {
+        // Load the data pointer onto the stack.
         il.LoadLocal(DataPointerSlot);
         
-        il.LoadConstantI4(1);
+        // TODO: Bounds checking.
         
+        // Add or subtract 1.
+        il.LoadConstantI4(1);
         il.OpCode(kind switch
         {
             MoveKind.Right => ILOpCode.Add,
@@ -137,6 +140,7 @@ internal sealed class InstructionEmitter
             _ => throw new UnreachableException()
         });
         
+        // Store the result back into the data pointer.
         il.StoreLocal(DataPointerSlot);
     }
 
