@@ -1,7 +1,7 @@
 ﻿namespace BrainfuckToIL;
 
 /// <summary>
-/// Options for a parsing operation.
+/// Options for a <see cref="Parser"/>.
 /// </summary>
 public readonly struct ParseOptions
 {
