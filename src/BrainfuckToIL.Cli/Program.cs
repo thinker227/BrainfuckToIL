@@ -46,11 +46,9 @@ static void Run(FileInfo sourceFile)
     var bytes = stream.ToArray();
 
     var assembly = Assembly.Load(bytes);
-    var programType = assembly.GetType("$<Program>") ?? throw new InvalidOperationException(
-        "Could not find or load type $<Program>.");
-    var mainMethod = programType.GetMethod("$<Main>") ?? throw new InvalidOperationException(
-        "Could not find or load method $<Main>.");
-    var main = mainMethod.CreateDelegate<Action>();
+    var entryPoint = assembly.EntryPoint ?? throw new InvalidOperationException(
+        $"Assembly {assembly.FullName} does not have an entry point.");
+    var main = entryPoint.CreateDelegate<Action>();
     
     main();
 }
