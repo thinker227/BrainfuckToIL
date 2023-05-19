@@ -10,6 +10,11 @@ public readonly struct EmitOptions
     /// </summary>
     public OutputKind OutputKind { get; init; } = OutputKind.Dll;
     
+    /// <summary>
+    /// The name of the emitted assembly.
+    /// </summary>
+    public required string AssemblyName { get; init; }
+    
     public EmitOptions() {}
 }
 

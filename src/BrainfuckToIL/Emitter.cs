@@ -43,7 +43,7 @@ public sealed class Emitter
     public static void Emit(
         IReadOnlyList<Instruction> instructions,
         Stream stream,
-        EmitOptions? options = null)
+        EmitOptions options)
     {
         var ilBuilder = new BlobBuilder();
         var metadata = new MetadataBuilder();
@@ -58,7 +58,7 @@ public sealed class Emitter
             flags: default,
             hashValue: default);
 
-        var emitter = new Emitter(instructions, ilBuilder, metadata, corelib, options ?? new());
+        var emitter = new Emitter(instructions, ilBuilder, metadata, corelib, options);
         var entryPoint = emitter.EmitEntryPoint();
 
         emitter.WritePeImage(stream, entryPoint);
@@ -68,8 +68,15 @@ public sealed class Emitter
         Stream stream,
         MethodDefinitionHandle entryPoint)
     {
+        var characteristics = options.OutputKind switch
+        {
+            OutputKind.Executable => Characteristics.ExecutableImage,
+            OutputKind.Dll => Characteristics.Dll,
+            _ => throw new UnreachableException()
+        };
+        
         var peHeaderBuilder = new PEHeaderBuilder(
-            imageCharacteristics: Characteristics.ExecutableImage);
+            imageCharacteristics: characteristics);
 
         var peBuilder = new ManagedPEBuilder(
             peHeaderBuilder,
@@ -88,7 +95,7 @@ public sealed class Emitter
         // Create main module.
         metadata.AddModule(
             generation: 0,
-            moduleName: metadata.GetOrAddString("Foo.dll"),
+            moduleName: metadata.GetOrAddString(GetModuleName()),
             // I have no idea what these do.
             mvid: metadata.GetOrAddGuid(guid),
             encId: default,
@@ -96,7 +103,7 @@ public sealed class Emitter
 
         // Create main assembly.
         metadata.AddAssembly(
-            name: metadata.GetOrAddString("Foo"),
+            name: metadata.GetOrAddString(options.AssemblyName),
             version: new(1, 0, 0, 0),
             culture: default,
             publicKey: default,
@@ -188,6 +195,13 @@ public sealed class Emitter
 
         return mainMethod;
     }
+
+    private string GetModuleName() => options.AssemblyName + options.OutputKind switch
+    {
+        OutputKind.Executable => ".exe",
+        OutputKind.Dll => ".dll",
+        _ => throw new UnreachableException()
+    };
 
     private static int EmitProgramCtor(
         BlobBuilder codeBuilder,
