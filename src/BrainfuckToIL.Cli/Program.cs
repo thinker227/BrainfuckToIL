@@ -17,7 +17,7 @@ static void Compile(FileInfo sourceFile, FileSystemInfo? destination, bool outpu
     Console.WriteLine($"{sourceFile.FullName} -> {outputFile.FullName}");
 
     var source = File.ReadAllText(sourceFile.FullName);
-    var instructions = BrainfuckToIL.Parser.Parse(source);
+    var instructions = Parser.Parse(source);
 
     using var outputStream = outputFile.OpenWrite();
     Emitter.Emit(instructions, outputStream);
@@ -26,7 +26,7 @@ static void Compile(FileInfo sourceFile, FileSystemInfo? destination, bool outpu
 static void Run(FileInfo sourceFile)
 {
     var source = File.ReadAllText(sourceFile.FullName);
-    var instructions = BrainfuckToIL.Parser.Parse(source);
+    var instructions = Parser.Parse(source);
 
     var stream = new MemoryStream();
     Emitter.Emit(instructions, stream);
