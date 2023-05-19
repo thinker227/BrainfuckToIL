@@ -1,4 +1,5 @@
 ﻿using System.CommandLine.Parsing;
+using BrainfuckToIL;
 using BrainfuckToIL.Cli;
 
 var rootCommand = CommandLine.GetRootCommand((sourceFile, destination, outputExe) =>
@@ -9,6 +10,12 @@ var rootCommand = CommandLine.GetRootCommand((sourceFile, destination, outputExe
     Source file: {sourceFile.FullName}
     Output file: {outputFile.FullName}
     """);
+
+    var source = File.ReadAllText(sourceFile.FullName);
+    var instructions = BrainfuckToIL.Parser.Parse(source);
+
+    using var outputStream = outputFile.OpenWrite();
+    Emitter.Emit(instructions, outputStream);
 });
 
 var parser = CommandLine.GetParser(rootCommand);
