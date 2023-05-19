@@ -51,7 +51,8 @@ public sealed class Parser
     }
     
     private readonly IEnumerator<char> input;
-    
+    private readonly ParserOptions options;
+
     /// <summary>
     /// The current position in the input.
     /// </summary>
@@ -70,9 +71,10 @@ public sealed class Parser
     /// </summary>
     private SequentialInstruction? sequentialInstruction;
 
-    private Parser(IEnumerator<char> input)
+    private Parser(IEnumerator<char> input, ParserOptions options)
     {
         this.input = input;
+        this.options = options;
         instructionsStack = new();
         position = 0;
         sequentialInstruction = null;
@@ -83,11 +85,11 @@ public sealed class Parser
     /// </summary>
     /// <param name="input">The input to parse. Should be finite.</param>
     /// <returns>An immutable array of instructions.</returns>
-    public static ImmutableArray<Instruction> Parse(IEnumerable<char> input)
+    public static ImmutableArray<Instruction> Parse(IEnumerable<char> input, ParserOptions? options = null)
     {
         // Append a trailing null terminator to guarantee that the parser doesn't discard on the ending input.
         using var enumerator = input.Append('\0').GetEnumerator();
-        var parser = new Parser(enumerator);
+        var parser = new Parser(enumerator, options ?? new());
         return parser.Parse();
     }
 
@@ -148,7 +150,7 @@ public sealed class Parser
         if (sequentialInstruction is not null && GetSequentialKind(c) != sequentialInstruction.Value.Kind)
             return new(FinishSequentialInstruction(), false);
         
-        if (ParseSequential(c)) return CharParseResult.Discard;
+        if (options.GroupSequentialInstructions && ParseSequential(c)) return CharParseResult.Discard;
 
         if (ParseSimple(c) is Instruction simple) return new(simple, true);
 
@@ -168,8 +170,17 @@ public sealed class Parser
     /// or <see langword="null"/> if the character could not be parsed as a simple instruction.</returns>
     private static Instruction? ParseSimple(char c) => c switch
     {
+        // These will always be parsed as simple.
         '.' => new Instruction.Output(),
         ',' => new Instruction.Input(),
+        
+        // These cases should only be reached if ParseSequential was not called for these instructions,
+        // i.e. if options.GroupSequentialInstructions is not enabled.
+        '+' => new Instruction.Arithmetic(1),
+        '-' => new Instruction.Arithmetic(-1),
+        '>' => new Instruction.Move(1),
+        '<' => new Instruction.Move(-1),
+        
         _ => null
     };
 
