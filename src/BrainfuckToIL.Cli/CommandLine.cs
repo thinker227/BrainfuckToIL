@@ -15,7 +15,7 @@ public static class CommandLine
     }
 
     public static RootCommand GetRootCommand(
-        Action<FileInfo, FileSystemInfo, bool> handler)
+        Action<FileInfo, FileSystemInfo?, bool> handler)
     {
         var rootCommand = new RootCommand()
         {
@@ -53,16 +53,19 @@ public static class CommandLine
         return argument;
     }
 
-    private static Argument<FileSystemInfo> OutputDestinationArgument()
+    private static Argument<FileSystemInfo?> OutputDestinationArgument()
     {
-        var argument = new Argument<FileSystemInfo>("output")
+        var argument = new Argument<FileSystemInfo?>("output")
         {
-            Description = "The output destination for the compiled DLL file. " +
+            Description = "The output destination for the compiled binary file. " +
                           "If the provided value is a directory then " +
-                          "the output DLL file will be located in the specified directory " +
-                          "and use the file name of the source file."
+                          "the output file will be located in the specified directory " +
+                          "and use the file name of the source file. " +
+                          "If not specified, the output file will be located in the same " +
+                          "directory as the source file and use the file name of the source file."
         };
         argument.LegalFilePathsOnly();
+        argument.SetDefaultValue(null);
         
         return argument;
     }
