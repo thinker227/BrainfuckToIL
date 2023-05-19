@@ -16,7 +16,7 @@ public static class CommandLine
 
     public static RootCommand GetRootCommand(Action<FileInfo, FileSystemInfo> handler)
     {
-        RootCommand rootCommand = new()
+        var rootCommand = new RootCommand()
         {
             Name = "BFtoIL",
             Description = "Simplistic Brainfuck to IL compiler."
@@ -38,7 +38,7 @@ public static class CommandLine
 
     private static Argument<FileInfo> SourceFileArgument()
     {
-        Argument<FileInfo> argument = new()
+        var argument = new Argument<FileInfo>()
         {
             Name = "source",
             Description = "The source file to compile."
@@ -51,7 +51,7 @@ public static class CommandLine
 
     private static Argument<FileSystemInfo> OutputDestinationArgument()
     {
-        Argument<FileSystemInfo> argument = new()
+        var argument = new Argument<FileSystemInfo>()
         {
             Name = "output",
             Description = "The output destination for the compiled DLL file. " +
