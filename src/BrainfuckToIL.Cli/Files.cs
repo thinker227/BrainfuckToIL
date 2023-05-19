@@ -24,7 +24,11 @@ internal static class Files
             
             DirectoryInfo dir => ToDirectory(inputFile, dir, outputExe),
             
-            null => ToDirectory(inputFile, inputFile.Directory, outputExe),
+            null => ToDirectory(
+                inputFile,
+                inputFile.Directory ?? throw new InvalidOperationException(
+                    $"File {inputFile.FullName} not have a parent directory."),
+                outputExe),
             
             _ => throw new UnreachableException()
         };
