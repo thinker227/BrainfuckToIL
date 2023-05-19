@@ -51,7 +51,7 @@ public sealed class Parser
     }
     
     private readonly IEnumerator<char> input;
-    private readonly ParserOptions options;
+    private readonly ParseOptions options;
 
     /// <summary>
     /// The current position in the input.
@@ -71,7 +71,7 @@ public sealed class Parser
     /// </summary>
     private SequentialInstruction? sequentialInstruction;
 
-    private Parser(IEnumerator<char> input, ParserOptions options)
+    private Parser(IEnumerator<char> input, ParseOptions options)
     {
         this.input = input;
         this.options = options;
@@ -85,7 +85,7 @@ public sealed class Parser
     /// </summary>
     /// <param name="input">The input to parse. Should be finite.</param>
     /// <returns>An immutable array of instructions.</returns>
-    public static ImmutableArray<Instruction> Parse(IEnumerable<char> input, ParserOptions? options = null)
+    public static ImmutableArray<Instruction> Parse(IEnumerable<char> input, ParseOptions? options = null)
     {
         // Append a trailing null terminator to guarantee that the parser doesn't discard on the ending input.
         using var enumerator = input.Append('\0').GetEnumerator();

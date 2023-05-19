@@ -3,7 +3,7 @@
 /// <summary>
 /// Options for a parsing operation.
 /// </summary>
-public readonly struct ParserOptions
+public readonly struct ParseOptions
 {
     /// <summary>
     /// Whether to group together sequential instructions (<c>+</c> and <c>-</c>, <c>&gt;</c> and <c>&lt;</c>).
@@ -22,5 +22,5 @@ public readonly struct ParserOptions
     /// </example>
     public bool GroupSequentialInstructions { get; init; } = true;
     
-    public ParserOptions() {}
+    public ParseOptions() {}
 }
