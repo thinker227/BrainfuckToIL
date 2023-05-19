@@ -14,7 +14,8 @@ public static class CommandLine
         return builder.Build();
     }
 
-    public static RootCommand GetRootCommand(Action<FileInfo, FileSystemInfo> handler)
+    public static RootCommand GetRootCommand(
+        Action<FileInfo, FileSystemInfo, bool> handler)
     {
         var rootCommand = new RootCommand()
         {
@@ -28,19 +29,22 @@ public static class CommandLine
         var outputDestinationArgument = OutputDestinationArgument();
         rootCommand.AddArgument(outputDestinationArgument);
 
+        var outputExeOption = OutputExeOption();
+        rootCommand.AddOption(outputExeOption);
+        
         rootCommand.SetHandler(
             handler,
             sourceFileArgument,
-            outputDestinationArgument);
+            outputDestinationArgument,
+            outputExeOption);
 
         return rootCommand;
     }
 
     private static Argument<FileInfo> SourceFileArgument()
     {
-        var argument = new Argument<FileInfo>()
+        var argument = new Argument<FileInfo>("source")
         {
-            Name = "source",
             Description = "The source file to compile."
         };
         argument.LegalFilePathsOnly();
@@ -51,17 +55,25 @@ public static class CommandLine
 
     private static Argument<FileSystemInfo> OutputDestinationArgument()
     {
-        var argument = new Argument<FileSystemInfo>()
+        var argument = new Argument<FileSystemInfo>("output")
         {
-            Name = "output",
             Description = "The output destination for the compiled DLL file. " +
                           "If the provided value is a directory then " +
                           "the output DLL file will be located in the specified directory " +
                           "and use the file name of the source file."
         };
         argument.LegalFilePathsOnly();
-        argument.ExistingOnly();
         
         return argument;
+    }
+
+    private static Option<bool> OutputExeOption()
+    {
+        var option = new Option<bool>("--exe")
+        {
+            Description = "Whether to output an exe file instead of a DLL."
+        };
+
+        return option;
     }
 }
