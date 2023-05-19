@@ -14,6 +14,18 @@ public readonly struct EmitOptions
     /// The name of the emitted assembly.
     /// </summary>
     public required string AssemblyName { get; init; }
+
+    /// <summary>
+    /// The name of the type to emit containing the entry point method.
+    /// Default is <c>$&lt;Program&gt;</c>.
+    /// </summary>
+    public string TypeName { get; init; } = "$<Program>";
+
+    /// <summary>
+    /// The name of the entry point method.
+    /// Default is <c>$&lt;Main&gt;</c>.
+    /// </summary>
+    public string MethodName { get; init; } = "$<Main>";
     
     public EmitOptions() {}
 }

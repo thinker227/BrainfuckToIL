@@ -142,24 +142,24 @@ public sealed class Emitter
         var methodBodyStream = new MethodBodyStreamEncoder(ilBuilder);
         var codeBuilder = new BlobBuilder();
 
-        // Get the body for $<Program>..ctor.
+        // Get the body for .ctor.
         var ctorBodyOffset = EmitProgramCtor(codeBuilder, methodBodyStream, objectCtorMember);
-        // Get the body for $<Program>.$<Main>
+        // Get the body for the entry point method.
         var mainBodyOffset = EmitMain(codeBuilder, methodBodyStream);
 
-        // Create the $<Program>.$<Main> method.
+        // Create the entry point method.
         var mainMethod = metadata.AddMethodDefinition(
             attributes:
                 MethodAttributes.Public |
                 MethodAttributes.Static |
                 MethodAttributes.HideBySig,
             implAttributes: MethodImplAttributes.IL,
-            name: metadata.GetOrAddString("$<Main>"),
+            name: metadata.GetOrAddString(options.MethodName),
             signature: metadata.GetOrAddBlob(mainSignature),
             bodyOffset: mainBodyOffset,
             parameterList: default);
 
-        // Create the $<Program>..ctor method.
+        // Create the .ctor method.
         metadata.AddMethodDefinition(
             attributes: MethodAttributes.Public |
                         MethodAttributes.HideBySig |
@@ -178,17 +178,17 @@ public sealed class Emitter
             name: metadata.GetOrAddString("<Module>"),
             baseType: default,
             fieldList: MetadataTokens.FieldDefinitionHandle(1),
-            // No idea why the main method has to be specified in both <Module> and $<Program>.
+            // No idea why the main method has to be specified in both <Module> and the program type.
             methodList: mainMethod);
 
-        // Create the $<Program> type.
+        // Create the type containing the entry point method.
         metadata.AddTypeDefinition(
             attributes: TypeAttributes.Class |
                         TypeAttributes.Public |
                         TypeAttributes.AutoLayout |
                         TypeAttributes.BeforeFieldInit,
             @namespace: default,
-            metadata.GetOrAddString("$<Program>"),
+            metadata.GetOrAddString(options.TypeName),
             baseType: systemObject,
             fieldList: MetadataTokens.FieldDefinitionHandle(1),
             mainMethod);
