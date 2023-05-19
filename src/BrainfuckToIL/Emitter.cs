@@ -17,17 +17,20 @@ public sealed class Emitter
     private readonly BlobBuilder ilBuilder;
     private readonly MetadataBuilder metadata;
     private readonly AssemblyReferenceHandle corelib;
+    private readonly EmitOptions options;
     private readonly Guid guid;
 
     public Emitter(IReadOnlyList<Instruction> instructions,
         BlobBuilder ilBuilder,
         MetadataBuilder metadata,
-        AssemblyReferenceHandle corelib)
+        AssemblyReferenceHandle corelib,
+        EmitOptions options)
     {
         this.instructions = instructions;
         this.ilBuilder = ilBuilder;
         this.metadata = metadata;
         this.corelib = corelib;
+        this.options = options;
         guid = Guid.NewGuid();
     }
 
@@ -36,7 +39,10 @@ public sealed class Emitter
     /// </summary>
     /// <param name="instructions">The instructions to emit.</param>
     /// <param name="stream">The stream to emit the instruction into.</param>
-    public static void Emit(IReadOnlyList<Instruction> instructions, Stream stream)
+    public static void Emit(
+        IReadOnlyList<Instruction> instructions,
+        Stream stream,
+        EmitOptions? options = null)
     {
         var ilBuilder = new BlobBuilder();
         var metadata = new MetadataBuilder();
@@ -51,7 +57,7 @@ public sealed class Emitter
             flags: default,
             hashValue: default);
 
-        var emitter = new Emitter(instructions, ilBuilder, metadata, corelib);
+        var emitter = new Emitter(instructions, ilBuilder, metadata, corelib, options ?? new());
         var entryPoint = emitter.EmitEntryPoint();
 
         emitter.WritePeImage(stream, entryPoint);
