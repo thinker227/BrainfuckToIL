@@ -13,6 +13,7 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
+		ToolDeploy|Any CPU = ToolDeploy|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -22,10 +23,14 @@ Global
 		{8638BD2D-8294-42BF-9BB2-C71235BCF7A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8638BD2D-8294-42BF-9BB2-C71235BCF7A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8638BD2D-8294-42BF-9BB2-C71235BCF7A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8638BD2D-8294-42BF-9BB2-C71235BCF7A5}.ToolDeploy|Any CPU.ActiveCfg = Release|Any CPU
+		{8638BD2D-8294-42BF-9BB2-C71235BCF7A5}.ToolDeploy|Any CPU.Build.0 = Release|Any CPU
 		{75B8868A-2C5D-4A7F-A5B1-8666B5053A44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{75B8868A-2C5D-4A7F-A5B1-8666B5053A44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{75B8868A-2C5D-4A7F-A5B1-8666B5053A44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{75B8868A-2C5D-4A7F-A5B1-8666B5053A44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75B8868A-2C5D-4A7F-A5B1-8666B5053A44}.ToolDeploy|Any CPU.ActiveCfg = ToolDeploy|Any CPU
+		{75B8868A-2C5D-4A7F-A5B1-8666B5053A44}.ToolDeploy|Any CPU.Build.0 = ToolDeploy|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8638BD2D-8294-42BF-9BB2-C71235BCF7A5} = {D284A335-ADD1-4CB6-85DB-86DF4A949DBB}

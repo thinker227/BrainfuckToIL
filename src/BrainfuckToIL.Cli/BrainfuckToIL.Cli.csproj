@@ -6,6 +6,25 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <Configurations>Debug;Release;ToolDeploy</Configurations>
+    <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)' == 'ToolDeploy'">
+    <PackageId>thinker227.BrainfuckToIL</PackageId>
+    <PackageProjectUrl>https://github.com/thinker227/BrainfuckToIL</PackageProjectUrl>
+    <License>https://github.com/thinker227/BrainfuckToIL/blob/main/LICENSE</License>
+    <Title>Brainfuck to IL</Title>
+    <Description>A simplistic Brainfuck to IL compiler.</Description>
+    <Author>thinker227</Author>
+    <Version>1.0.0-pre</Version>
+    <PackAsTool>true</PackAsTool>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <ToolCommandName>BFtoIL</ToolCommandName>
+    <PackageOutputPath>bin/Package</PackageOutputPath>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Spectre.Console" Version="0.46.0" />
