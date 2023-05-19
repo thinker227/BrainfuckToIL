@@ -15,7 +15,8 @@ public static class CommandLine
     }
 
     public static RootCommand GetRootCommand(
-        Action<FileInfo, FileSystemInfo?, bool> handler)
+        Action<FileInfo, FileSystemInfo?, bool> compileCommandHandler,
+        Action<FileInfo> runCommandHandler)
     {
         var rootCommand = new RootCommand()
         {
@@ -23,39 +24,31 @@ public static class CommandLine
             Description = "Simplistic Brainfuck to IL compiler."
         };
 
-        var sourceFileArgument = SourceFileArgument();
-        rootCommand.AddArgument(sourceFileArgument);
+        var compileCommand = CompileCommand(compileCommandHandler);
+        rootCommand.AddCommand(compileCommand);
 
-        var outputDestinationArgument = OutputDestinationArgument();
-        rootCommand.AddArgument(outputDestinationArgument);
-
-        var outputExeOption = OutputExeOption();
-        rootCommand.AddOption(outputExeOption);
-        
-        rootCommand.SetHandler(
-            handler,
-            sourceFileArgument,
-            outputDestinationArgument,
-            outputExeOption);
+        var runCommand = RunCommand(runCommandHandler);
+        rootCommand.AddCommand(runCommand);
 
         return rootCommand;
     }
 
-    private static Argument<FileInfo> SourceFileArgument()
+    private static Command CompileCommand(Action<FileInfo, FileSystemInfo?, bool> handler)
     {
-        var argument = new Argument<FileInfo>("source")
+        var command = new Command("compile")
+        {
+            Description = "Compiles a file to IL."
+        };
+        
+        var sourceArgument = new Argument<FileInfo>("source")
         {
             Description = "The source file to compile."
         };
-        argument.LegalFilePathsOnly();
-        argument.ExistingOnly();
-
-        return argument;
-    }
-
-    private static Argument<FileSystemInfo?> OutputDestinationArgument()
-    {
-        var argument = new Argument<FileSystemInfo?>("output")
+        sourceArgument.LegalFilePathsOnly();
+        sourceArgument.ExistingOnly();
+        command.AddArgument(sourceArgument);
+        
+        var outputArgument = new Argument<FileSystemInfo?>("output")
         {
             Description = "The output destination for the compiled binary file. " +
                           "If the provided value is a directory then " +
@@ -64,19 +57,45 @@ public static class CommandLine
                           "If not specified, the output file will be located in the same " +
                           "directory as the source file and use the file name of the source file."
         };
-        argument.LegalFilePathsOnly();
-        argument.SetDefaultValue(null);
+        outputArgument.LegalFilePathsOnly();
+        outputArgument.SetDefaultValue(null);
+        command.AddArgument(outputArgument);
         
-        return argument;
-    }
-
-    private static Option<bool> OutputExeOption()
-    {
-        var option = new Option<bool>("--exe")
+        var exeOption = new Option<bool>("--exe")
         {
             Description = "Whether to output an exe file instead of a DLL."
         };
+        exeOption.SetDefaultValue(false);
+        command.AddOption(exeOption);
+        
+        command.SetHandler(
+            handler,
+            sourceArgument,
+            outputArgument,
+            exeOption);
 
-        return option;
+        return command;
+    }
+
+    private static Command RunCommand(Action<FileInfo> handler)
+    {
+        var command = new Command("run")
+        {
+            Description = "Compiles and runs a file."
+        };
+
+        var sourceArgument = new Argument<FileInfo>("source")
+        {
+            Description = "The source file to compile and run."
+        };
+        sourceArgument.LegalFilePathsOnly();
+        sourceArgument.ExistingOnly();
+        command.AddArgument(sourceArgument);
+        
+        command.SetHandler(
+            handler,
+            sourceArgument);
+
+        return command;
     }
 }
