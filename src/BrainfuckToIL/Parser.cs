@@ -181,11 +181,11 @@ public sealed class Parser
     {
         if (sequentialInstruction is null) throw new InvalidOperationException(
             "Attempted to finish a sequential instruction which was null.");
-        
-        if (sequentialInstruction is { Value: 0 }) return null;
-        
+
         var seq = sequentialInstruction.Value;
         sequentialInstruction = null;
+        
+        if (seq is { Value: 0 }) return null;
         
         return seq.Kind switch
         {
