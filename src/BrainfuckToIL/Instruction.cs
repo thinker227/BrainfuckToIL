@@ -8,24 +8,16 @@ namespace BrainfuckToIL;
 public abstract record Instruction
 {
     /// <summary>
-    /// A move right <c>&gt;</c> instruction
+    /// One or more move right <c>&gt;</c> or move left <c>&lt;</c> instructions.
     /// </summary>
-    public sealed record MoveRight : Instruction;
+    /// <param name="Distance">The accumulative distance of the instructions.</param>
+    public sealed record Move(int Distance) : Instruction;
 
     /// <summary>
-    /// A move left <c>&lt;</c> instruction
+    /// One or more increment <c>+</c> or decrement <c>-</c> instructions.
     /// </summary>
-    public sealed record MoveLeft : Instruction;
-
-    /// <summary>
-    /// An increment <c>+</c> instruction
-    /// </summary>
-    public sealed record Increment : Instruction;
-
-    /// <summary>
-    /// A decrement <c>-</c> instruction
-    /// </summary>
-    public sealed record Decrement : Instruction;
+    /// <param name="Value">The accumulative value of the instructions.</param>
+    public sealed record Arithmetic(int Value) : Instruction;
 
     /// <summary>
     /// An output <c>.</c> instruction
