@@ -31,7 +31,7 @@ internal static class Files
 
     private static FileInfo CreateFile(FileInfo file)
     {
-        File.Create(file.FullName);
+        using var _ = File.Create(file.FullName);
         return new(file.FullName);
     }
 
@@ -42,7 +42,7 @@ internal static class Files
         var outputName = inputName + outputExtension;
         var outputPath = Path.Combine(outputDirectory.FullName, outputName);
         
-        File.Create(outputPath);
+        using var _ = File.Create(outputPath);
         return new(outputPath);
     }
 }
