@@ -85,7 +85,8 @@ public sealed class Parser
     /// <returns>An immutable array of instructions.</returns>
     public static ImmutableArray<Instruction> Parse(IEnumerable<char> input)
     {
-        using var enumerator = input.GetEnumerator();
+        // Append a trailing null terminator to guarantee that the parser doesn't discard on the ending input.
+        using var enumerator = input.Append('\0').GetEnumerator();
         var parser = new Parser(enumerator);
         return parser.Parse();
     }
