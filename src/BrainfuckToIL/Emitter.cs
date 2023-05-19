@@ -39,6 +39,7 @@ public sealed class Emitter
     /// </summary>
     /// <param name="instructions">The instructions to emit.</param>
     /// <param name="stream">The stream to emit the instruction into.</param>
+    /// <param name="options">The options to use for emission.</param>
     public static void Emit(
         IReadOnlyList<Instruction> instructions,
         Stream stream,
