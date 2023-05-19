@@ -6,10 +6,7 @@ var rootCommand = CommandLine.GetRootCommand((sourceFile, destination, outputExe
 {
     var outputFile = Files.GetOrCreateOutputFile(sourceFile, destination, outputExe);
 
-    Console.WriteLine($"""
-    Source file: {sourceFile.FullName}
-    Output file: {outputFile.FullName}
-    """);
+    Console.WriteLine($"{sourceFile.FullName} -> {outputFile.FullName}");
 
     var source = File.ReadAllText(sourceFile.FullName);
     var instructions = BrainfuckToIL.Parser.Parse(source);
