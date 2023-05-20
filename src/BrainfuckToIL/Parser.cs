@@ -128,9 +128,7 @@ public sealed class Parser
             // then there's one or more unterminated loops somewhere.
             while (instructionsStack.Count > 1)
             {
-                var loop = instructionsStack.Pop();
-                
-                instructionsStack.Peek().Instructions.Add(CreateLoopInstruction());
+                var loop = instructionsStack.Peek();
                 
                 var loopStartPosition = loop.StartPosition;
                 
@@ -141,6 +139,9 @@ public sealed class Parser
                 var error = new Error(
                     "Unterminated loop.",
                     new(loopStartPosition.Value));
+                
+                var errorInstruction = CreateLoopInstruction(ImmutableArray.Create(error));
+                instructionsStack.Peek().Instructions.Add(errorInstruction);
             }
 
             break;
@@ -329,7 +330,8 @@ public sealed class Parser
     }
 
     /// <summary>
-    /// Creates a <see cref="Instruction.Loop"/> instruction.
+    /// Creates a <see cref="Instruction.Loop"/> instruction,
+    /// in the process popping the topmost element of <see cref="instructionsStack"/>.
     /// </summary>
     /// <param name="errors">The errors for the instruction.</param>
     private Instruction.Loop CreateLoopInstruction(ImmutableArray<Error>? errors = null)
