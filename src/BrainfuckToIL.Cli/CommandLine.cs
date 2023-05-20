@@ -1,5 +1,6 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Builder;
+using BrainfuckToIL.Cli.Handlers;
 
 namespace BrainfuckToIL.Cli;
 
@@ -14,9 +15,7 @@ internal static class CommandLine
         return builder.Build();
     }
 
-    public static RootCommand GetRootCommand(
-        Action<FileInfo, FileSystemInfo?, DisplayOutputKind> compileCommandHandler,
-        Action<FileInfo> runCommandHandler)
+    public static RootCommand GetRootCommand()
     {
         var rootCommand = new RootCommand()
         {
@@ -24,16 +23,16 @@ internal static class CommandLine
             Description = "Simplistic Brainfuck to IL compiler."
         };
 
-        var compileCommand = CompileCommand(compileCommandHandler);
+        var compileCommand = CompileCommand();
         rootCommand.AddCommand(compileCommand);
 
-        var runCommand = RunCommand(runCommandHandler);
+        var runCommand = RunCommand();
         rootCommand.AddCommand(runCommand);
 
         return rootCommand;
     }
 
-    private static Command CompileCommand(Action<FileInfo, FileSystemInfo?, DisplayOutputKind> handler)
+    private static Command CompileCommand()
     {
         var command = new Command("compile")
         {
@@ -69,16 +68,19 @@ internal static class CommandLine
         outputKindOption.SetDefaultValue(DisplayOutputKind.Exe);
         command.AddOption(outputKindOption);
         
-        command.SetHandler(
-            handler,
-            sourceArgument,
-            outputArgument,
-            outputKindOption);
+        command.SetHandler(ctx =>
+        {
+            var handler = new Compile(ctx.Console);
+            ctx.ExitCode = handler.Handle(
+                ctx.ParseResult.GetValueForArgument(sourceArgument),
+                ctx.ParseResult.GetValueForArgument(outputArgument),
+                ctx.ParseResult.GetValueForOption(outputKindOption));
+        });
 
         return command;
     }
 
-    private static Command RunCommand(Action<FileInfo> handler)
+    private static Command RunCommand()
     {
         var command = new Command("run")
         {
@@ -93,9 +95,12 @@ internal static class CommandLine
         sourceArgument.ExistingOnly();
         command.AddArgument(sourceArgument);
         
-        command.SetHandler(
-            handler,
-            sourceArgument);
+        command.SetHandler(ctx =>
+        {
+            var handler = new Run(ctx.Console);
+            ctx.ExitCode = handler.Handle(
+                ctx.ParseResult.GetValueForArgument(sourceArgument));
+        });
 
         return command;
     }
