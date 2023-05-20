@@ -136,12 +136,15 @@ public sealed class Parser
                     "Unterminated loop.",
                     new(loopStartPosition));
                 
-                var errorInstruction = new Instruction.Loop(loop.Instructions.ToImmutable())
+                var loopInstructions = loop.Instructions.ToImmutable();
+
+                var loopEndPosition = loopInstructions.IsEmpty
+                    ? loopStartPosition + 1
+                    : loopInstructions[^1].Location.End;
+                
+                var errorInstruction = new Instruction.Loop(loopInstructions)
                 {
-                    // This looks odd but since there's a null terminator attached to the end of the input
-                    // and since the position will be one after the null terminator by this point,
-                    // position - 1 is the last position of the input.
-                    Location = new(loop.StartPosition, position - 1),
+                    Location = new(loop.StartPosition, loopEndPosition),
                     Errors = ImmutableArray.Create(error)
                 };
                 instructionsStack.Peek().Instructions.Add(errorInstruction);
@@ -218,7 +221,9 @@ public sealed class Parser
         // TODO: Should this just return a 0-length instruction which the emitter deals with later?
         if (seq is { Value: 0 }) return null;
 
-        var location = new TextSpan(seq.StartPosition, position + 1);
+        // This method is called when the position has already progressed one past
+        // the end of the sequential instruction.
+        var location = new TextSpan(seq.StartPosition, position);
 
         return seq.Kind switch
         {
