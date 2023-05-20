@@ -20,7 +20,7 @@ public sealed class Emitter
     private readonly EmitOptions options;
     private readonly Guid guid;
 
-    public Emitter(IReadOnlyList<Instruction> instructions,
+    private Emitter(IReadOnlyList<Instruction> instructions,
         BlobBuilder ilBuilder,
         MetadataBuilder metadata,
         AssemblyReferenceHandle corelib,
