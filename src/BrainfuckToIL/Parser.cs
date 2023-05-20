@@ -29,7 +29,7 @@ public sealed class Parser
     /// <param name="StartPosition">The start position in the input of the array.</param>
     private readonly record struct InstructionArray(
         ImmutableArray<Instruction>.Builder Instructions,
-        int? StartPosition);
+        int StartPosition);
     
     /// <summary>
     /// The kind of a sequential instruction.
@@ -104,7 +104,7 @@ public sealed class Parser
     {
         instructionsStack.Push(new(
             ImmutableArray.CreateBuilder<Instruction>(),
-            null));
+            0));
 
         var moveNext = true;
         
@@ -132,13 +132,9 @@ public sealed class Parser
                 
                 var loopStartPosition = loop.StartPosition;
                 
-                // Loops should always have a start position.
-                if (loopStartPosition is null) throw new InvalidOperationException(
-                    "Loop does not have a starting position.");
-                
                 var error = new Error(
                     "Unterminated loop.",
-                    new(loopStartPosition.Value));
+                    new(loopStartPosition));
                 
                 var errorInstruction = CreateLoopInstruction(ImmutableArray.Create(error));
                 instructionsStack.Peek().Instructions.Add(errorInstruction);
@@ -345,15 +341,11 @@ public sealed class Parser
         
         var loop = instructionsStack.Pop();
         var instructions = loop.Instructions.ToImmutable();
-
-        // Loops should always have a start position.
-        if (loop.StartPosition is null) throw new InvalidOperationException(
-            "Loop does not have a starting position.");
         
         return new(instructions)
         {
             // TODO: This can be out of bounds if the method is called to create an error.
-            Location = new(loop.StartPosition.Value, position + 1),
+            Location = new(loop.StartPosition, position + 1),
             Errors = errors ?? ImmutableArray<Error>.Empty
         };
     }
