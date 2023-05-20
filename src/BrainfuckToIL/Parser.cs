@@ -128,7 +128,7 @@ public sealed class Parser
             // then there's one or more unterminated loops somewhere.
             while (instructionsStack.Count > 1)
             {
-                var loop = instructionsStack.Peek();
+                var loop = instructionsStack.Pop();
                 
                 var loopStartPosition = loop.StartPosition;
                 
@@ -136,7 +136,14 @@ public sealed class Parser
                     "Unterminated loop.",
                     new(loopStartPosition));
                 
-                var errorInstruction = CreateLoopInstruction(ImmutableArray.Create(error));
+                var errorInstruction = new Instruction.Loop(loop.Instructions.ToImmutable())
+                {
+                    // This looks odd but since there's a null terminator attached to the end of the input
+                    // and since the position will be one after the null terminator by this point,
+                    // position - 1 is the last position of the input.
+                    Location = new(loop.StartPosition, position - 1),
+                    Errors = ImmutableArray.Create(error)
+                };
                 instructionsStack.Peek().Instructions.Add(errorInstruction);
             }
 
@@ -326,27 +333,13 @@ public sealed class Parser
                 "Instructions stack was empty.");
         }
         
-        return CreateLoopInstruction();
-    }
-
-    /// <summary>
-    /// Creates a <see cref="Instruction.Loop"/> instruction,
-    /// in the process popping the topmost element of <see cref="instructionsStack"/>.
-    /// </summary>
-    /// <param name="errors">The errors for the instruction.</param>
-    private Instruction.Loop CreateLoopInstruction(ImmutableArray<Error>? errors = null)
-    {
-        if (instructionsStack.Count <= 1) throw new InvalidOperationException(
-            "Instructions stack contains no loops.");
-        
         var loop = instructionsStack.Pop();
         var instructions = loop.Instructions.ToImmutable();
         
-        return new(instructions)
+        return new Instruction.Loop(instructions)
         {
-            // TODO: This can be out of bounds if the method is called to create an error.
             Location = new(loop.StartPosition, position + 1),
-            Errors = errors ?? ImmutableArray<Error>.Empty
+            Errors = ImmutableArray<Error>.Empty
         };
     }
 }
