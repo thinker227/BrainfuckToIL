@@ -10,25 +10,25 @@ internal static class Files
     /// </summary>
     /// <param name="inputFile">The input file.</param>
     /// <param name="outputDestination">The output destination, or <see langword="null"/>.</param>
-    /// <param name="outputExe">Whether to output an exe file or not.</param>
+    /// <param name="outputKind">The kind of file to output.</param>
     /// <returns>The created output file, or <paramref name="inputFile"/> if it already exists.</returns>
     public static FileInfo GetOrCreateOutputFile(
         FileInfo inputFile,
         FileSystemInfo? outputDestination,
-        bool outputExe) =>
+        DisplayOutputKind outputKind) =>
         outputDestination switch
         {
             FileInfo { Exists: true } file => file,
             
             FileInfo file => CreateFile(file),
             
-            DirectoryInfo dir => ToDirectory(inputFile, dir, outputExe),
+            DirectoryInfo dir => ToDirectory(inputFile, dir, outputKind),
             
             null => ToDirectory(
                 inputFile,
                 inputFile.Directory ?? throw new InvalidOperationException(
                     $"File {inputFile.FullName} not have a parent directory."),
-                outputExe),
+                outputKind),
             
             _ => throw new UnreachableException()
         };
@@ -39,10 +39,10 @@ internal static class Files
         return new(file.FullName);
     }
 
-    private static FileInfo ToDirectory(FileInfo inputFile, DirectoryInfo outputDirectory, bool outputExe)
+    private static FileInfo ToDirectory(FileInfo inputFile, DirectoryInfo outputDirectory, DisplayOutputKind outputKind)
     {
         var inputName = Path.GetFileNameWithoutExtension(inputFile.Name);
-        var outputExtension = outputExe ? ".exe" : ".dll";
+        var outputExtension = outputKind.GetFileExtension();
         var outputName = inputName + outputExtension;
         var outputPath = Path.Combine(outputDirectory.FullName, outputName);
         

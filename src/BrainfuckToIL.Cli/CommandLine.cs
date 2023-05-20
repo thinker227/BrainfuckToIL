@@ -3,7 +3,7 @@ using System.CommandLine.Builder;
 
 namespace BrainfuckToIL.Cli;
 
-public static class CommandLine
+internal static class CommandLine
 {
     public static CommandLineParser GetParser(RootCommand rootCommand)
     {
@@ -15,7 +15,7 @@ public static class CommandLine
     }
 
     public static RootCommand GetRootCommand(
-        Action<FileInfo, FileSystemInfo?, bool> compileCommandHandler,
+        Action<FileInfo, FileSystemInfo?, DisplayOutputKind> compileCommandHandler,
         Action<FileInfo> runCommandHandler)
     {
         var rootCommand = new RootCommand()
@@ -33,7 +33,7 @@ public static class CommandLine
         return rootCommand;
     }
 
-    private static Command CompileCommand(Action<FileInfo, FileSystemInfo?, bool> handler)
+    private static Command CompileCommand(Action<FileInfo, FileSystemInfo?, DisplayOutputKind> handler)
     {
         var command = new Command("compile")
         {
@@ -60,19 +60,20 @@ public static class CommandLine
         outputArgument.LegalFilePathsOnly();
         outputArgument.SetDefaultValue(null);
         command.AddArgument(outputArgument);
-        
-        var exeOption = new Option<bool>("--exe")
+
+        var outputKindOption = new Option<DisplayOutputKind>("--output-kind")
         {
-            Description = "Whether to output an exe file instead of a DLL."
+            Description = "Whether to output an exe or DLL file."
         };
-        exeOption.SetDefaultValue(false);
-        command.AddOption(exeOption);
+        outputKindOption.AddAlias("-o");
+        outputKindOption.SetDefaultValue(DisplayOutputKind.Exe);
+        command.AddOption(outputKindOption);
         
         command.SetHandler(
             handler,
             sourceArgument,
             outputArgument,
-            exeOption);
+            outputKindOption);
 
         return command;
     }
