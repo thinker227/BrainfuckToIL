@@ -45,7 +45,10 @@ public sealed class Parser
     /// </summary>
     /// <param name="Kind">The kind of the instruction.</param>
     /// <param name="Value">The accumulative value of the instruction.</param>
-    private record struct SequentialInstruction(SequentialKind Kind, int Value)
+    private record struct SequentialInstruction(
+        SequentialKind Kind,
+        int Value,
+        int StartPosition)
     {
         public SequentialKind Kind { get; } = Kind;
     }
@@ -85,7 +88,7 @@ public sealed class Parser
     /// </summary>
     /// <param name="input">The input to parse. Should be finite.</param>
     /// <returns>An immutable array of instructions.</returns>
-    public static ImmutableArray<Instruction> Parse(IEnumerable<char> input, ParseOptions? options = null)
+    public static ParseResult Parse(IEnumerable<char> input, ParseOptions? options = null)
     {
         // Append a trailing null terminator to guarantee that the parser doesn't discard on the ending input.
         using var enumerator = input.Append('\0').GetEnumerator();
@@ -97,7 +100,7 @@ public sealed class Parser
     /// Parses all characters in the input.
     /// </summary>
     /// <returns>The parsed instructions.</returns>
-    private ImmutableArray<Instruction> Parse()
+    private ParseResult Parse()
     {
         instructionsStack.Push(new(
             ImmutableArray.CreateBuilder<Instruction>(),
@@ -121,23 +124,34 @@ public sealed class Parser
         switch (instructionsStack.Count)
         {
         case > 1:
+            // If the instructions stack has more than a single element
+            // then there's one or more unterminated loops somewhere.
+            while (instructionsStack.Count > 1)
             {
-                // If the instructions stack has more than a single element
-                // then there's an unterminated loop somewhere.
-
-                var loopStartPosition = instructionsStack.Peek().StartPosition;
-            
-                // TODO: Better error handling.
-                throw new InvalidOperationException(
-                    $"Unterminated loop at position {loopStartPosition}.");
+                var loop = instructionsStack.Pop();
+                
+                instructionsStack.Peek().Instructions.Add(CreateLoopInstruction());
+                
+                var loopStartPosition = loop.StartPosition;
+                
+                // Loops should always have a start position.
+                if (loopStartPosition is null) throw new InvalidOperationException(
+                    "Loop does not have a starting position.");
+                
+                var error = new Error(
+                    "Unterminated loop.",
+                    new(loopStartPosition.Value));
             }
+
+            break;
         
         case <= 0:
             throw new InvalidOperationException(
                 "Instructions stack was empty.");
         }
-        
-        return instructionsStack.Pop().Instructions.ToImmutable();
+
+        var instructions = instructionsStack.Pop().Instructions.ToImmutable();
+        return new(instructions);
     }
 
     /// <summary>
@@ -220,7 +234,7 @@ public sealed class Parser
         
         if (sequentialInstruction is null)
         {
-            sequentialInstruction = new(kind, value);
+            sequentialInstruction = new(kind, value, position);
             return true;
         }
         
@@ -291,20 +305,42 @@ public sealed class Parser
         switch (instructionsStack.Count)
         {
         case 1:
-            // If the instructions stack only has a single element and a loop end is encountered
-            // then it's a loop ending with no corresponding loop start.
+            {
+                // If the instructions stack only has a single element and a loop end is encountered
+                // then it's a loop ending with no corresponding loop start.
             
-            // TODO: Better error handling.
-            throw new InvalidOperationException(
-                $"Encountered loop ending at position {position} with no loop start.");
+                var error = new Error(
+                    "Encountered loop ending with no loop start.",
+                    new(position));
+
+                // Return an error instruction since there's no better kind of instruction to return here.
+                return new Instruction.Error()
+                {
+                    Errors = ImmutableArray.Create(error)
+                };
+            }
         
         case <= 0:
             throw new InvalidOperationException(
                 "Instructions stack was empty.");
         }
         
-        // Gather up all the accumulated instructions and turn them into a Loop instruction.
+        return CreateLoopInstruction();
+    }
+
+    /// <summary>
+    /// Creates a <see cref="Instruction.Loop"/> instruction.
+    /// </summary>
+    /// <param name="errors">The errors for the instruction.</param>
+    private Instruction.Loop CreateLoopInstruction(ImmutableArray<Error>? errors = null)
+    {
+        if (instructionsStack.Count <= 1) throw new InvalidOperationException(
+            "Instructions stack contains no loops.");
+        
         var instructions = instructionsStack.Pop().Instructions.ToImmutable();
-        return new Instruction.Loop(instructions);
+        return new(instructions)
+        {
+            Errors = errors ?? ImmutableArray<Error>.Empty
+        };
     }
 }
