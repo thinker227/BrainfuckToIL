@@ -87,6 +87,7 @@ public sealed class Parser
     /// Parses a sequence of instructions.
     /// </summary>
     /// <param name="input">The input to parse. Should be finite.</param>
+    /// <param name="options">The options for the parser.</param>
     /// <returns>An immutable array of instructions.</returns>
     public static ParseResult Parse(IEnumerable<char> input, ParseOptions? options = null)
     {
