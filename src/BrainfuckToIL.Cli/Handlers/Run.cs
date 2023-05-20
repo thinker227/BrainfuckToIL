@@ -14,10 +14,12 @@ internal sealed class Run
         var sourceFileName = Path.GetFileNameWithoutExtension(sourceFile.Name);
     
         var source = File.ReadAllText(sourceFile.FullName);
-        var instructions = Parser.Parse(source);
+        var result = Parser.Parse(source);
 
+        // TODO: Error reporting.
+        
         var stream = new MemoryStream();
-        Emitter.Emit(instructions, stream, new EmitOptions()
+        Emitter.Emit(result.Instructions, stream, new EmitOptions()
         {
             AssemblyName = sourceFileName,
             OutputKind = OutputKind.Dll

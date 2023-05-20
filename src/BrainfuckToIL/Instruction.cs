@@ -8,6 +8,11 @@ namespace BrainfuckToIL;
 public abstract record Instruction
 {
     /// <summary>
+    /// The parse errors caused by the instruction.
+    /// </summary>
+    public ImmutableArray<BrainfuckToIL.Error> Errors { get; init; } = ImmutableArray<BrainfuckToIL.Error>.Empty;
+
+    /// <summary>
     /// One or more move right <c>&gt;</c> or move left <c>&lt;</c> instructions.
     /// </summary>
     /// <param name="Distance">The accumulative distance of the instructions.</param>
@@ -34,4 +39,9 @@ public abstract record Instruction
     /// </summary>
     /// <param name="Instructions">The instruction within the loop.</param>
     public sealed record Loop(ImmutableArray<Instruction> Instructions) : Instruction;
+
+    /// <summary>
+    /// An instruction which is the result of a parse error.
+    /// </summary>
+    public sealed record Error : Instruction;
 }

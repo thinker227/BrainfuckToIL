@@ -16,10 +16,12 @@ internal sealed class Compile
         console.WriteLine($"{sourceFile.FullName} -> {outputFile.FullName}");
 
         var source = File.ReadAllText(sourceFile.FullName);
-        var instructions = Parser.Parse(source);
+        var result = Parser.Parse(source);
+        
+        // TODO: Error reporting.
 
         using var outputStream = outputFile.OpenWrite();
-        Emitter.Emit(instructions, outputStream, new EmitOptions()
+        Emitter.Emit(result.Instructions, outputStream, new EmitOptions()
         {
             AssemblyName = outputFileName,
             OutputKind = outputKind.ToCoreOutputKind()
