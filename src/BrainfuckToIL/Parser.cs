@@ -183,18 +183,18 @@ public sealed class Parser
     /// <param name="c">The character to parse.</param>
     /// <returns>An instruction created from the character,
     /// or <see langword="null"/> if the character could not be parsed as a simple instruction.</returns>
-    private static Instruction? ParseSimple(char c) => c switch
+    private Instruction? ParseSimple(char c) => c switch
     {
         // These will always be parsed as simple.
-        '.' => new Instruction.Output(),
-        ',' => new Instruction.Input(),
+        '.' => new Instruction.Output() { Location = new(position) },
+        ',' => new Instruction.Input() { Location = new(position) },
         
         // These cases should only be reached if ParseSequential was not called for these instructions,
         // i.e. if options.GroupSequentialInstructions is not enabled.
-        '+' => new Instruction.Arithmetic(1),
-        '-' => new Instruction.Arithmetic(-1),
-        '>' => new Instruction.Move(1),
-        '<' => new Instruction.Move(-1),
+        '+' => new Instruction.Arithmetic(1) { Location = new(position) },
+        '-' => new Instruction.Arithmetic(-1) { Location = new(position) },
+        '>' => new Instruction.Move(1) { Location = new(position) },
+        '<' => new Instruction.Move(-1) { Location = new(position) },
         
         _ => null
     };
@@ -212,12 +212,15 @@ public sealed class Parser
         var seq = sequentialInstruction.Value;
         sequentialInstruction = null;
         
+        // TODO: Should this just return a 0-length instruction which the emitter deals with later?
         if (seq is { Value: 0 }) return null;
-        
+
+        var location = new TextSpan(seq.StartPosition, position + 1);
+
         return seq.Kind switch
         {
-            SequentialKind.Move => new Instruction.Move(seq.Value),
-            SequentialKind.Arithmetic => new Instruction.Arithmetic(seq.Value),
+            SequentialKind.Move => new Instruction.Move(seq.Value) { Location = location },
+            SequentialKind.Arithmetic => new Instruction.Arithmetic(seq.Value) { Location = location },
             _ => throw new UnreachableException()
         };
     }
@@ -317,6 +320,7 @@ public sealed class Parser
                 // Return an error instruction since there's no better kind of instruction to return here.
                 return new Instruction.Error()
                 {
+                    Location = new(position),
                     Errors = ImmutableArray.Create(error)
                 };
             }
@@ -339,9 +343,17 @@ public sealed class Parser
         if (instructionsStack.Count <= 1) throw new InvalidOperationException(
             "Instructions stack contains no loops.");
         
-        var instructions = instructionsStack.Pop().Instructions.ToImmutable();
+        var loop = instructionsStack.Pop();
+        var instructions = loop.Instructions.ToImmutable();
+
+        // Loops should always have a start position.
+        if (loop.StartPosition is null) throw new InvalidOperationException(
+            "Loop does not have a starting position.");
+        
         return new(instructions)
         {
+            // TODO: This can be out of bounds if the method is called to create an error.
+            Location = new(loop.StartPosition.Value, position + 1),
             Errors = errors ?? ImmutableArray<Error>.Empty
         };
     }

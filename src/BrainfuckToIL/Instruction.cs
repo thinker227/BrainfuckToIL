@@ -8,6 +8,11 @@ namespace BrainfuckToIL;
 public abstract record Instruction
 {
     /// <summary>
+    /// The location of the instruction in the source text.
+    /// </summary>
+    public required TextSpan Location { get; init; }
+    
+    /// <summary>
     /// The parse errors caused by the instruction.
     /// </summary>
     public ImmutableArray<BrainfuckToIL.Error> Errors { get; init; } = ImmutableArray<BrainfuckToIL.Error>.Empty;
