@@ -3,7 +3,7 @@
 /// <summary>
 /// A span of text.
 /// </summary>
-public readonly struct TextSpan
+public readonly struct TextSpan : IEquatable<TextSpan>
 {
     /// <summary>
     /// The inclusive start of the span.
@@ -52,4 +52,24 @@ public readonly struct TextSpan
     /// <param name="start">The inclusive start of the span.</param>
     /// <param name="length">The length of the span.</param>
     public static TextSpan FromLength(int start, int length) => new(start, start + length);
+
+    public override string ToString() => Length == 1
+        ? Start.ToString()
+        : $"{Start}..{End}";
+
+    public bool Equals(TextSpan other) =>
+        other.Start == Start &&
+        other.End == End;
+
+    public override bool Equals(object? obj) =>
+        obj is TextSpan span && Equals(span);
+
+    public override int GetHashCode() =>
+        HashCode.Combine(Start, End);
+
+    public static bool operator ==(TextSpan a, TextSpan b) =>
+        a.Equals(b);
+
+    public static bool operator !=(TextSpan a, TextSpan b) =>
+        !a.Equals(b);
 }
