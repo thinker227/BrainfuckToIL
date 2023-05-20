@@ -34,7 +34,7 @@ public readonly struct TextSpan
     /// <param name="end">The exclusive end of the span.</param>
     public TextSpan(int start, int end)
     {
-        if (start < end) (start, end) = (end, start);
+        if (start > end) (start, end) = (end, start);
 
         Start = start;
         End = end;
