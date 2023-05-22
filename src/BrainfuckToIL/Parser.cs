@@ -55,10 +55,6 @@ public sealed class Parser
     
     private readonly IEnumerator<char> input;
     private readonly ParseOptions options;
-
-    /// <summary>
-    /// The current position in the input.
-    /// </summary>
     private int position;
     
     /// <summary>
