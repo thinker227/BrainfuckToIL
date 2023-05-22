@@ -19,7 +19,7 @@ public sealed class Emitter
     private readonly MetadataBuilder metadata;
     private readonly EmitPrerequisites prerequisites;
     private readonly EmitOptions options;
-    private readonly Guid guid;
+    private readonly Guid moduleVersionId;
 
     private Emitter(IReadOnlyList<Instruction> instructions,
         BlobBuilder ilBuilder,
@@ -33,7 +33,7 @@ public sealed class Emitter
         this.metadata = metadata;
         this.prerequisites = prerequisites;
         this.options = options;
-        guid = Guid.NewGuid();
+        moduleVersionId = options.ModuleVersionId ?? Guid.NewGuid();
     }
 
     /// <summary>
@@ -106,7 +106,7 @@ public sealed class Emitter
             generation: 0,
             moduleName: metadata.GetOrAddString(GetModuleName()),
             // Module version ID.
-            mvid: metadata.GetOrAddGuid(guid),
+            mvid: metadata.GetOrAddGuid(moduleVersionId),
             encId: default,
             encBaseId: default);
 

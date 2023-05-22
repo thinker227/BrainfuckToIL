@@ -27,6 +27,14 @@ public readonly struct EmitOptions
     /// </summary>
     public string MethodName { get; init; } = "$<Main>";
     
+    /// <summary>
+    /// The version ID of the module. Good luck figuring out what that is.
+    /// </summary>
+    /// <remarks>
+    /// If <see langword="null"/> then a random guid will be generated.
+    /// </remarks>
+    public Guid? ModuleVersionId { get; init; }
+    
     public EmitOptions() {}
 }
 
