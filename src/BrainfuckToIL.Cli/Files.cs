@@ -35,7 +35,7 @@ internal static class Files
 
     private static FileInfo CreateFile(FileInfo file)
     {
-        using var _ = File.Create(file.FullName);
+        CreateEmptyFile(file.FullName);
         return new(file.FullName);
     }
 
@@ -46,7 +46,15 @@ internal static class Files
         var outputName = inputName + outputExtension;
         var outputPath = Path.Combine(outputDirectory.FullName, outputName);
         
-        using var _ = File.Create(outputPath);
+        CreateEmptyFile(outputPath);
         return new(outputPath);
     }
+
+    /// <summary>
+    /// Creates an empty file with a given path.
+    /// Overrides the file if it already exists.
+    /// </summary>
+    /// <param name="path">The path of the file to create.</param>
+    public static void CreateEmptyFile(string path) =>
+        File.WriteAllBytes(path, Array.Empty<byte>());
 }
