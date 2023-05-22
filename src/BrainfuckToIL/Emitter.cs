@@ -15,21 +15,23 @@ public sealed class Emitter
 {
     private readonly IReadOnlyList<Instruction> instructions;
     private readonly BlobBuilder ilBuilder;
+    private readonly MethodBodyStreamEncoder methodBodyStream;
     private readonly MetadataBuilder metadata;
-    private readonly AssemblyReferenceHandle corelib;
+    private readonly EmitPrerequisites prerequisites;
     private readonly EmitOptions options;
     private readonly Guid guid;
 
     private Emitter(IReadOnlyList<Instruction> instructions,
         BlobBuilder ilBuilder,
         MetadataBuilder metadata,
-        AssemblyReferenceHandle corelib,
+        EmitPrerequisites prerequisites,
         EmitOptions options)
     {
         this.instructions = instructions;
         this.ilBuilder = ilBuilder;
+        methodBodyStream = new(ilBuilder);
         this.metadata = metadata;
-        this.corelib = corelib;
+        this.prerequisites = prerequisites;
         this.options = options;
         guid = Guid.NewGuid();
     }
@@ -47,18 +49,10 @@ public sealed class Emitter
     {
         var ilBuilder = new BlobBuilder();
         var metadata = new MetadataBuilder();
-        
-        var corelib = metadata.AddAssemblyReference(
-            name: metadata.GetOrAddString("mscorlib"),
-            version: new(4, 0, 0, 0),
-            culture: default,
-            publicKeyOrToken: metadata.GetOrAddBlob(
-                // Magic key identifying mscorlib.
-                new byte[] { 0xB7, 0x7A, 0x5C, 0x56, 0x19, 0x34, 0xE0, 0x89 }),
-            flags: default,
-            hashValue: default);
 
-        var emitter = new Emitter(instructions, ilBuilder, metadata, corelib, options);
+        var prerequisites = EmitPrerequisites.Create(metadata);
+
+        var emitter = new Emitter(instructions, ilBuilder, metadata, prerequisites, options);
         var entryPoint = emitter.EmitEntryPoint();
 
         emitter.WritePeImage(stream, entryPoint);
@@ -94,30 +88,7 @@ public sealed class Emitter
 
     private MethodDefinitionHandle EmitEntryPoint()
     {
-        // Create main module.
-        metadata.AddModule(
-            generation: 0,
-            moduleName: metadata.GetOrAddString(GetModuleName()),
-            // Module version ID.
-            mvid: metadata.GetOrAddGuid(guid),
-            encId: default,
-            encBaseId: default);
-
-        // Create main assembly.
-        metadata.AddAssembly(
-            name: metadata.GetOrAddString(options.AssemblyName),
-            version: new(1, 0, 0, 0),
-            culture: default,
-            // I hope you won't ever use this assembly as a library lmao.
-            publicKey: default,
-            flags: 0,
-            hashAlgorithm: AssemblyHashAlgorithm.None);
-
-        // Get a type reference to System.Object.
-        var systemObject = metadata.AddTypeReference(
-            corelib,
-            metadata.GetOrAddString("System"),
-            metadata.GetOrAddString("Object"));
+        CreateModuleAndAssembly();
 
         // Create the signature for the parameterless constructor.
         var parameterlessCtorSignature = new BlobBuilder();
@@ -130,7 +101,7 @@ public sealed class Emitter
 
         // Get a member reference to System.Object..ctor.
         var objectCtorMember = metadata.AddMemberReference(
-            systemObject,
+            prerequisites.SystemObject,
             metadata.GetOrAddString(".ctor"),
             parameterlessCtorBlobIndex);
 
@@ -142,13 +113,10 @@ public sealed class Emitter
                 ret => ret.Void(),
                 _ => {});
         
-        var methodBodyStream = new MethodBodyStreamEncoder(ilBuilder);
-        var codeBuilder = new BlobBuilder();
-
         // Get the body for .ctor.
-        var ctorBodyOffset = EmitProgramCtor(codeBuilder, methodBodyStream, objectCtorMember);
+        var ctorBodyOffset = EmitProgramCtor(objectCtorMember);
         // Get the body for the entry point method.
-        var mainBodyOffset = EmitMain(codeBuilder, methodBodyStream);
+        var mainBodyOffset = EmitMain();
 
         // Create the entry point method.
         var mainMethod = metadata.AddMethodDefinition(
@@ -192,13 +160,35 @@ public sealed class Emitter
                         TypeAttributes.BeforeFieldInit,
             @namespace: default,
             metadata.GetOrAddString(options.TypeName),
-            baseType: systemObject,
+            baseType: prerequisites.SystemObject,
             fieldList: MetadataTokens.FieldDefinitionHandle(1),
             mainMethod);
 
         return mainMethod;
     }
 
+    private void CreateModuleAndAssembly()
+    {
+        // Create main module.
+        metadata.AddModule(
+            generation: 0,
+            moduleName: metadata.GetOrAddString(GetModuleName()),
+            // Module version ID.
+            mvid: metadata.GetOrAddGuid(guid),
+            encId: default,
+            encBaseId: default);
+
+        // Create main assembly.
+        metadata.AddAssembly(
+            name: metadata.GetOrAddString(options.AssemblyName),
+            version: new(1, 0, 0, 0),
+            culture: default,
+            // I hope you won't ever use this assembly as a library lmao.
+            publicKey: default,
+            flags: 0,
+            hashAlgorithm: AssemblyHashAlgorithm.None);
+    }
+    
     private string GetModuleName() => options.AssemblyName + options.OutputKind switch
     {
         OutputKind.Executable => ".exe",
@@ -206,11 +196,29 @@ public sealed class Emitter
         _ => throw new UnreachableException()
     };
 
-    private static int EmitProgramCtor(
-        BlobBuilder codeBuilder,
-        MethodBodyStreamEncoder methodBodyStream,
-        MemberReferenceHandle objectCtorMember)
+    private void CreateCtor()
     {
+        // Create signature.
+        var signature = new BlobBuilder();
+        new BlobEncoder(signature)
+            .MethodSignature(isInstanceMethod: true)
+            .Parameters(0, 
+                ret => ret.Void(),
+                _ => {});
+        var signatureIndex = metadata.GetOrAddBlob(signature);
+        
+        // Get a member reference to System.Object..ctor.
+        var objectCtorMember = metadata.AddMemberReference(
+            prerequisites.SystemObject,
+            metadata.GetOrAddString(".ctor"),
+            signatureIndex);
+        
+        var ctorBodyOffset = EmitProgramCtor(objectCtorMember);
+    }
+
+    private int EmitProgramCtor(MemberReferenceHandle objectCtorMember)
+    {
+        var codeBuilder = new BlobBuilder();
         var il = new InstructionEncoder(codeBuilder);
         
         il.LoadArgument(0);
@@ -218,15 +226,13 @@ public sealed class Emitter
         il.OpCode(ILOpCode.Ret);
 
         var ctorBodyOffset = methodBodyStream.AddMethodBody(il);
-        codeBuilder.Clear();
 
         return ctorBodyOffset;
     }
 
-    private int EmitMain(
-        BlobBuilder codeBuilder,
-        MethodBodyStreamEncoder methodBodyStream)
+    private int EmitMain()
     {
+        var codeBuilder = new BlobBuilder();
         var flowBuilder = new ControlFlowBuilder();
         var il = new InstructionEncoder(codeBuilder, flowBuilder);
 
@@ -245,7 +251,7 @@ public sealed class Emitter
 
     private InstructionEmitter.Types GetTypes() => new(
         metadata.AddTypeReference(
-            corelib,
+            prerequisites.Corelib,
             metadata.GetOrAddString("System"),
             metadata.GetOrAddString("Byte")));
 }
