@@ -77,9 +77,7 @@ internal static class CommandLine
         
         command.SetHandler(ctx =>
         {
-            var handler = new Compile(
-                ctx.Console,
-                ctx.BindingContext.GetRequiredService<TextReader>());
+            var handler = new Compile(ctx.Console);
             
             ctx.ExitCode = handler.Handle(
                 ctx.ParseResult.GetValueForArgument(sourceArgument),

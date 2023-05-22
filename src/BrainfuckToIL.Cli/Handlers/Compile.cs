@@ -5,12 +5,10 @@ namespace BrainfuckToIL.Cli.Handlers;
 internal sealed class Compile
 {
     private readonly IConsole console;
-    private readonly TextReader reader;
 
-    public Compile(IConsole console, TextReader reader)
+    public Compile(IConsole console)
     {
         this.console = console;
-        this.reader = reader;
     }
 
     public int Handle(FileInfo sourceFile, FileSystemInfo? destination, DisplayOutputKind outputKind)
