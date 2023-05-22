@@ -90,81 +90,13 @@ public sealed class Emitter
     {
         CreateModuleAndAssembly();
 
-        // Create the signature for the parameterless constructor.
-        var parameterlessCtorSignature = new BlobBuilder();
-        new BlobEncoder(parameterlessCtorSignature)
-            .MethodSignature(isInstanceMethod: true)
-            .Parameters(0, 
-                ret => ret.Void(),
-                _ => {});
-        var parameterlessCtorBlobIndex = metadata.GetOrAddBlob(parameterlessCtorSignature);
-
-        // Get a member reference to System.Object..ctor.
-        var objectCtorMember = metadata.AddMemberReference(
-            prerequisites.SystemObject,
-            metadata.GetOrAddString(".ctor"),
-            parameterlessCtorBlobIndex);
-
-        // Create the signature for the main method.
-        var mainSignature = new BlobBuilder();
-        new BlobEncoder(mainSignature)
-            .MethodSignature()
-            .Parameters(0, 
-                ret => ret.Void(),
-                _ => {});
+        CreateCtor();
+        var main = CreateMain();
         
-        // Get the body for .ctor.
-        var ctorBodyOffset = EmitProgramCtor(objectCtorMember);
-        // Get the body for the entry point method.
-        var mainBodyOffset = EmitMain();
+        CreateModuleType(main);
+        CreateProgramType(main);
 
-        // Create the entry point method.
-        var mainMethod = metadata.AddMethodDefinition(
-            attributes:
-                MethodAttributes.Public |
-                MethodAttributes.Static |
-                MethodAttributes.HideBySig,
-            implAttributes: MethodImplAttributes.IL,
-            name: metadata.GetOrAddString(options.MethodName),
-            signature: metadata.GetOrAddBlob(mainSignature),
-            bodyOffset: mainBodyOffset,
-            parameterList: default);
-
-        // Create the .ctor method.
-        metadata.AddMethodDefinition(
-            attributes: MethodAttributes.Public |
-                        MethodAttributes.HideBySig |
-                        MethodAttributes.SpecialName |
-                        MethodAttributes.RTSpecialName,
-            implAttributes: MethodImplAttributes.IL,
-            name: metadata.GetOrAddString(".ctor"),
-            signature: parameterlessCtorBlobIndex,
-            bodyOffset: ctorBodyOffset,
-            parameterList: default);
-
-        // Create the <Module> type.
-        metadata.AddTypeDefinition(
-            attributes: default,
-            @namespace: default,
-            name: metadata.GetOrAddString("<Module>"),
-            baseType: default,
-            fieldList: MetadataTokens.FieldDefinitionHandle(1),
-            // No idea why the main method has to be specified in both <Module> and the program type.
-            methodList: mainMethod);
-
-        // Create the type containing the entry point method.
-        metadata.AddTypeDefinition(
-            attributes: TypeAttributes.Class |
-                        TypeAttributes.Public |
-                        TypeAttributes.AutoLayout |
-                        TypeAttributes.BeforeFieldInit,
-            @namespace: default,
-            metadata.GetOrAddString(options.TypeName),
-            baseType: prerequisites.SystemObject,
-            fieldList: MetadataTokens.FieldDefinitionHandle(1),
-            mainMethod);
-
-        return mainMethod;
+        return main;
     }
 
     private void CreateModuleAndAssembly()
@@ -198,36 +130,65 @@ public sealed class Emitter
 
     private void CreateCtor()
     {
-        // Create signature.
-        var signature = new BlobBuilder();
-        new BlobEncoder(signature)
-            .MethodSignature(isInstanceMethod: true)
-            .Parameters(0, 
-                ret => ret.Void(),
-                _ => {});
-        var signatureIndex = metadata.GetOrAddBlob(signature);
+        var bodyOffset = EmitProgramCtor();
         
-        // Get a member reference to System.Object..ctor.
-        var objectCtorMember = metadata.AddMemberReference(
-            prerequisites.SystemObject,
-            metadata.GetOrAddString(".ctor"),
-            signatureIndex);
+        // Create the .ctor method.
+        metadata.AddMethodDefinition(
+            attributes: MethodAttributes.Public |
+                        MethodAttributes.HideBySig |
+                        MethodAttributes.SpecialName |
+                        MethodAttributes.RTSpecialName,
+            implAttributes: MethodImplAttributes.IL,
+            name: metadata.GetOrAddString(".ctor"),
+            signature: prerequisites.ParameterlessCtor,
+            bodyOffset: bodyOffset,
+            parameterList: default);
         
-        var ctorBodyOffset = EmitProgramCtor(objectCtorMember);
+        // The ctor method definition handle is never required anywhere according to the docs,
+        // so the parameterless ctor likely is only required to be present in the metadata
+        // to be used as the base case for all types without other constructors.
     }
 
-    private int EmitProgramCtor(MemberReferenceHandle objectCtorMember)
+    private int EmitProgramCtor()
     {
         var codeBuilder = new BlobBuilder();
         var il = new InstructionEncoder(codeBuilder);
         
         il.LoadArgument(0);
-        il.Call(objectCtorMember);
+        il.Call(prerequisites.SystemObjectCtor);
         il.OpCode(ILOpCode.Ret);
 
-        var ctorBodyOffset = methodBodyStream.AddMethodBody(il);
+        var bodyOffset = methodBodyStream.AddMethodBody(il);
 
-        return ctorBodyOffset;
+        return bodyOffset;
+    }
+
+    private MethodDefinitionHandle CreateMain()
+    {
+        // Create the signature for the main method.
+        var signature = new BlobBuilder();
+        new BlobEncoder(signature)
+            .MethodSignature()
+            .Parameters(0, 
+                ret => ret.Void(),
+                _ => {});
+        
+        // Get the body for the entry point method.
+        var bodyOffset = EmitMain();
+
+        // Create the entry point method.
+        var method = metadata.AddMethodDefinition(
+            attributes:
+            MethodAttributes.Public |
+            MethodAttributes.Static |
+            MethodAttributes.HideBySig,
+            implAttributes: MethodImplAttributes.IL,
+            name: metadata.GetOrAddString(options.MethodName),
+            signature: metadata.GetOrAddBlob(signature),
+            bodyOffset: bodyOffset,
+            parameterList: default);
+
+        return method;
     }
 
     private int EmitMain()
@@ -248,10 +209,32 @@ public sealed class Emitter
 
         return mainBodyOffset;
     }
-
+    
     private InstructionEmitter.Types GetTypes() => new(
         metadata.AddTypeReference(
             prerequisites.Corelib,
             metadata.GetOrAddString("System"),
             metadata.GetOrAddString("Byte")));
+
+    private void CreateModuleType(MethodDefinitionHandle mainMethod) =>
+        metadata.AddTypeDefinition(
+            attributes: default,
+            @namespace: default,
+            name: metadata.GetOrAddString("<Module>"),
+            baseType: default,
+            fieldList: MetadataTokens.FieldDefinitionHandle(1),
+            // No idea why the main method has to be specified in both <Module> and the program type.
+            methodList: mainMethod);
+
+    private void CreateProgramType(MethodDefinitionHandle mainMethod) =>
+        metadata.AddTypeDefinition(
+            attributes: TypeAttributes.Class |
+                        TypeAttributes.Public |
+                        TypeAttributes.AutoLayout |
+                        TypeAttributes.BeforeFieldInit,
+            @namespace: default,
+            metadata.GetOrAddString(options.TypeName),
+            baseType: prerequisites.SystemObject,
+            fieldList: MetadataTokens.FieldDefinitionHandle(1),
+            mainMethod);
 }

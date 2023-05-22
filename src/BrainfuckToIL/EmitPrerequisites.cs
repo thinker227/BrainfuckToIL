@@ -19,10 +19,15 @@ internal readonly struct EmitPrerequisites
     public required TypeReferenceHandle SystemObject { get; init; }
     
     /// <summary>
+    /// Handle to the method signature for a parameterless constructor.
+    /// </summary>
+    public required BlobHandle ParameterlessCtor { get; init; }
+    
+    /// <summary>
     /// Member reference to <see cref="object()"/>.
     /// </summary>
     public required MemberReferenceHandle SystemObjectCtor { get; init; }
-    
+
     public static EmitPrerequisites Create(MetadataBuilder metadata)
     {
         var corelib = metadata.AddAssemblyReference(
@@ -47,17 +52,18 @@ internal readonly struct EmitPrerequisites
             .Parameters(0, 
                 ret => ret.Void(),
                 _ => {});
-        var parameterlessCtorBlobIndex = metadata.GetOrAddBlob(parameterlessCtorSignature);
+        var parameterlessCtor = metadata.GetOrAddBlob(parameterlessCtorSignature);
 
         var systemObjectCtor = metadata.AddMemberReference(
             systemObject,
             metadata.GetOrAddString(".ctor"),
-            parameterlessCtorBlobIndex);
+            parameterlessCtor);
 
         return new()
         {
             Corelib = corelib,
             SystemObject = systemObject,
+            ParameterlessCtor = parameterlessCtor,
             SystemObjectCtor = systemObjectCtor
         };
     }
