@@ -1,16 +1,22 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Builder;
+using Spectre.Console;
 using BrainfuckToIL.Cli.Handlers;
 
 namespace BrainfuckToIL.Cli;
 
 internal static class CommandLine
 {
-    public static CommandLineParser GetParser(RootCommand rootCommand)
+    public static CommandLineParser GetParser(RootCommand rootCommand, IAnsiConsole console)
     {
         var builder = new CommandLineBuilder(rootCommand);
         
         builder.UseDefaults();
+        
+        builder.AddMiddleware(ctx =>
+        {
+            ctx.Console = new SpectreConsoleConsole(console);
+        });
         
         return builder.Build();
     }
