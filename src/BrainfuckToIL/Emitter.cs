@@ -14,12 +14,12 @@ namespace BrainfuckToIL;
 public sealed class Emitter
 {
     private readonly IReadOnlyList<Instruction> instructions;
+    private readonly MetadataBuilder metadata;
     private readonly BlobBuilder ilBuilder;
     private readonly MethodBodyStreamEncoder methodBodyStream;
-    private readonly MetadataBuilder metadata;
+    private readonly Guid moduleVersionId;
     private readonly EmitPrerequisites prerequisites;
     private readonly EmitOptions options;
-    private readonly Guid moduleVersionId;
 
     private Emitter(IReadOnlyList<Instruction> instructions,
         BlobBuilder ilBuilder,
@@ -72,14 +72,15 @@ public sealed class Emitter
         var peHeaderBuilder = new PEHeaderBuilder(
             imageCharacteristics: characteristics);
 
+        // The PE builder allows for a deterministic ID provider, but I doubt that is necessary here.
         var peBuilder = new ManagedPEBuilder(
-            peHeaderBuilder,
-            new(metadata),
-            ilBuilder,
+            header: peHeaderBuilder,
+            metadataRootBuilder: new(metadata),
+            ilStream: ilBuilder,
             entryPoint: entryPoint,
             flags: CorFlags.ILOnly);
 
-        // Serializes the PE builder into a blob.
+        // Serialize the PE builder into a blob.
         var peBlob = new BlobBuilder();
         peBuilder.Serialize(peBlob);
         
