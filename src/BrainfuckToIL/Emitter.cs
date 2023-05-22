@@ -53,7 +53,7 @@ public sealed class Emitter
             version: new(4, 0, 0, 0),
             culture: default,
             publicKeyOrToken: metadata.GetOrAddBlob(
-                // TODO: Investigate what this does.
+                // Magic key identifying mscorlib.
                 new byte[] { 0xB7, 0x7A, 0x5C, 0x56, 0x19, 0x34, 0xE0, 0x89 }),
             flags: default,
             hashValue: default);
@@ -85,8 +85,10 @@ public sealed class Emitter
             entryPoint: entryPoint,
             flags: CorFlags.ILOnly);
 
+        // Serializes the PE builder into a blob.
         var peBlob = new BlobBuilder();
-        var contentId = peBuilder.Serialize(peBlob);
+        peBuilder.Serialize(peBlob);
+        
         peBlob.WriteContentTo(stream);
     }
 
@@ -96,7 +98,7 @@ public sealed class Emitter
         metadata.AddModule(
             generation: 0,
             moduleName: metadata.GetOrAddString(GetModuleName()),
-            // I have no idea what these do.
+            // Module version ID.
             mvid: metadata.GetOrAddGuid(guid),
             encId: default,
             encBaseId: default);
@@ -106,6 +108,7 @@ public sealed class Emitter
             name: metadata.GetOrAddString(options.AssemblyName),
             version: new(1, 0, 0, 0),
             culture: default,
+            // I hope you won't ever use this assembly as a library lmao.
             publicKey: default,
             flags: 0,
             hashAlgorithm: AssemblyHashAlgorithm.None);
