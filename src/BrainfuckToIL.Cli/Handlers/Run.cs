@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using System.CommandLine.IO;
 using System.Reflection;
 
 namespace BrainfuckToIL.Cli.Handlers;
@@ -6,8 +7,13 @@ namespace BrainfuckToIL.Cli.Handlers;
 internal sealed class Run
 {
     private readonly IConsole console;
+    private readonly TextReader reader;
 
-    public Run(IConsole console) => this.console = console;
+    public Run(IConsole console, TextReader reader)
+    {
+        this.console = console;
+        this.reader = reader;
+    }
 
     public int Handle(FileInfo sourceFile)
     {
