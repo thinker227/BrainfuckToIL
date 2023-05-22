@@ -34,6 +34,11 @@ public readonly struct EmitOptions
     /// If <see langword="null"/> then a random guid will be generated.
     /// </remarks>
     public Guid? ModuleVersionId { get; init; }
+
+    /// <summary>
+    /// The version of the assembly. Default is 1.0.0.0.
+    /// </summary>
+    public Version AssemblyVersion { get; init; } = new Version(1, 0, 0, 0);
     
     public EmitOptions() {}
 }

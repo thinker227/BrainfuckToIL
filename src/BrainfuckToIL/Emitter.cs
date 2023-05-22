@@ -114,7 +114,7 @@ public sealed class Emitter
         // Create main assembly.
         metadata.AddAssembly(
             name: metadata.GetOrAddString(options.AssemblyName),
-            version: new(1, 0, 0, 0),
+            version: options.AssemblyVersion,
             culture: default,
             // I hope you won't ever use this assembly as a library lmao.
             publicKey: default,
