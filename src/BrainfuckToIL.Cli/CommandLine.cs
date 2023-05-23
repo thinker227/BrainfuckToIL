@@ -1,5 +1,6 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Builder;
+using System.CommandLine.Invocation;
 using Spectre.Console;
 using BrainfuckToIL.Cli.Handlers;
 
@@ -7,23 +8,32 @@ namespace BrainfuckToIL.Cli;
 
 internal static class CommandLine
 {
-    public static CommandLineParser GetParser(IAnsiConsole console)
+    public static CommandLineParser GetParser()
     {
-        var rootCommand = GetRootCommand();
+        var (rootCommand, plainOption) = GetRootCommand();
         var builder = new CommandLineBuilder(rootCommand);
         
         builder.UseDefaults();
         
         builder.AddMiddleware(ctx =>
         {
+            var plain = ctx.ParseResult.GetValueForOption(plainOption);
+
+            var console = AnsiConsole.Create(new AnsiConsoleSettings()
+            {
+                ColorSystem = plain
+                    ? ColorSystemSupport.NoColors
+                    : ColorSystemSupport.Detect
+            });
+            
             ctx.Console = new SpectreConsoleConsole(console);
             ctx.BindingContext.AddService(_ => console);
-        });
+        }, MiddlewareOrder.Configuration);
         
         return builder.Build();
     }
 
-    private static RootCommand GetRootCommand()
+    private static (RootCommand, Option<bool>) GetRootCommand()
     {
         var rootCommand = new RootCommand()
         {
@@ -31,13 +41,19 @@ internal static class CommandLine
             Description = "Simplistic Brainfuck to IL compiler."
         };
 
+        var plainOption = new Option<bool>("--plain")
+        {
+            Description = "Disables color output from the compiler CLI."
+        };
+        rootCommand.AddGlobalOption(plainOption);
+
         var compileCommand = CompileCommand();
         rootCommand.AddCommand(compileCommand);
 
         var runCommand = RunCommand();
         rootCommand.AddCommand(runCommand);
 
-        return rootCommand;
+        return (rootCommand, plainOption);
     }
 
     private static Command CompileCommand()
