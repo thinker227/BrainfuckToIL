@@ -7,7 +7,7 @@ namespace BrainfuckToIL.Cli;
 
 internal static class CommandLine
 {
-    public static CommandLineParser GetParser(RootCommand rootCommand, IAnsiConsole console, TextReader reader)
+    public static CommandLineParser GetParser(RootCommand rootCommand, IAnsiConsole console)
     {
         var builder = new CommandLineBuilder(rootCommand);
         
@@ -16,7 +16,7 @@ internal static class CommandLine
         builder.AddMiddleware(ctx =>
         {
             ctx.Console = new SpectreConsoleConsole(console);
-            ctx.BindingContext.AddService(_ => reader);
+            ctx.BindingContext.AddService(_ => console);
         });
         
         return builder.Build();
@@ -77,7 +77,8 @@ internal static class CommandLine
         
         command.SetHandler(ctx =>
         {
-            var handler = new Compile(ctx.Console);
+            var handler = new Compile(
+                ctx.BindingContext.GetRequiredService<IAnsiConsole>());
             
             ctx.ExitCode = handler.Handle(
                 ctx.ParseResult.GetValueForArgument(sourceArgument),
@@ -106,8 +107,7 @@ internal static class CommandLine
         command.SetHandler(ctx =>
         {
             var handler = new Run(
-                ctx.Console,
-                ctx.BindingContext.GetRequiredService<TextReader>());
+                ctx.BindingContext.GetRequiredService<IAnsiConsole>());
             
             ctx.ExitCode = handler.Handle(
                 ctx.ParseResult.GetValueForArgument(sourceArgument));

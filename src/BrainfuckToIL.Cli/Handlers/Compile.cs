@@ -1,15 +1,12 @@
-﻿using System.CommandLine;
+﻿using Spectre.Console;
 
 namespace BrainfuckToIL.Cli.Handlers;
 
 internal sealed class Compile
 {
-    private readonly IConsole console;
+    private readonly IAnsiConsole console;
 
-    public Compile(IConsole console)
-    {
-        this.console = console;
-    }
+    public Compile(IAnsiConsole console) => this.console = console;
 
     public int Handle(FileInfo sourceFile, FileSystemInfo? destination, DisplayOutputKind outputKind)
     {

@@ -1,19 +1,13 @@
-﻿using System.CommandLine;
-using System.CommandLine.IO;
-using System.Reflection;
+﻿using System.Reflection;
+using Spectre.Console;
 
 namespace BrainfuckToIL.Cli.Handlers;
 
 internal sealed class Run
 {
-    private readonly IConsole console;
-    private readonly TextReader reader;
+    private readonly IAnsiConsole console;
 
-    public Run(IConsole console, TextReader reader)
-    {
-        this.console = console;
-        this.reader = reader;
-    }
+    public Run(IAnsiConsole console) => this.console = console;
 
     public int Handle(FileInfo sourceFile)
     {

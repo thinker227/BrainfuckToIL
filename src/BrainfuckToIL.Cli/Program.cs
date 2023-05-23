@@ -3,8 +3,7 @@ using Spectre.Console;
 using BrainfuckToIL.Cli;
 
 var console = AnsiConsole.Console;
-var reader = Console.In;
 
 var rootCommand = CommandLine.GetRootCommand();
-var parser = CommandLine.GetParser(rootCommand, console, reader);
+var parser = CommandLine.GetParser(rootCommand, console);
 parser.Invoke(args);
