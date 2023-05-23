@@ -7,7 +7,7 @@ on:
     paths:
     - 'src/**'
     
-  pull-request:
+  pull_request:
     branches:
     - main
     paths:
