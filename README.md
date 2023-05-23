@@ -16,6 +16,8 @@ cd BrainfuckToIL
 ./install-tool.ps1
 ```
 
+If you get an error attempting to run the Powershell script, you can instead manually run the commands in [install-tool.ps1](./install-tool-ps1).
+
 ### Install from Nuget
 
 A Nuget package is currently not available.
