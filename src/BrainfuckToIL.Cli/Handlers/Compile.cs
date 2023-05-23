@@ -13,7 +13,7 @@ internal sealed class Compile
         var outputFile = Files.GetOrCreateOutputFile(sourceFile, destination, outputKind);
         var outputFileName = Path.GetFileNameWithoutExtension(outputFile.Name);
     
-        console.WriteLine($"{sourceFile.FullName} -> {outputFile.FullName}");
+        console.MarkupLine($"[green]{sourceFile.FullName}[/] -> [green]{outputFile.FullName}[/]");
 
         var source = File.ReadAllText(sourceFile.FullName);
         var result = Parser.Parse(source);
