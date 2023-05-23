@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Immutable;
+using System.Reflection;
 using Spectre.Console;
 
 namespace BrainfuckToIL.Cli.Handlers;
@@ -16,7 +17,12 @@ internal sealed class Run
         var source = File.ReadAllText(sourceFile.FullName);
         var result = Parser.Parse(source);
 
-        // TODO: Error reporting.
+        var errors = result.Errors.ToImmutableArray();
+        if (!errors.IsEmpty)
+        {
+            console.WriteErrors(errors, source);
+            return 1;
+        }
         
         var stream = new MemoryStream();
         Emitter.Emit(result.Instructions, stream, new EmitOptions()

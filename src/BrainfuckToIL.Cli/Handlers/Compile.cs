@@ -1,4 +1,5 @@
-﻿using Spectre.Console;
+﻿using System.Collections.Immutable;
+using Spectre.Console;
 
 namespace BrainfuckToIL.Cli.Handlers;
 
@@ -12,13 +13,18 @@ internal sealed class Compile
     {
         var outputFile = Files.GetOrCreateOutputFile(sourceFile, destination, outputKind);
         var outputFileName = Path.GetFileNameWithoutExtension(outputFile.Name);
-    
-        console.MarkupLine($"[green]{sourceFile.FullName}[/] -> [green]{outputFile.FullName}[/]");
 
         var source = File.ReadAllText(sourceFile.FullName);
         var result = Parser.Parse(source);
         
-        // TODO: Error reporting.
+        var errors = result.Errors.ToImmutableArray();
+        if (!errors.IsEmpty)
+        {
+            console.WriteErrors(errors, source);
+            return 1;
+        }
+        
+        console.MarkupLine($"[green]{sourceFile.FullName}[/] -> [green]{outputFile.FullName}[/]");
 
         using var outputStream = outputFile.OpenWrite();
         Emitter.Emit(result.Instructions, outputStream, new EmitOptions()
