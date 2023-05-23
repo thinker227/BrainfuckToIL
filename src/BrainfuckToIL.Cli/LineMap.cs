@@ -42,23 +42,24 @@ internal sealed class LineMap : IReadOnlyCollection<TextSpan>
         var builder = ImmutableArray.CreateBuilder<TextSpan>();
         
         var position = 0;
+        var current = span;
 
         while (true)
         {
-            var newlineIndex = span.IndexOf("\n");
+            var newlineIndex = current.IndexOf("\n");
             var end = newlineIndex >= 0
                 ? newlineIndex + 1
                 : null as int?;
 
             var textSpan = end is not null
                 ? new TextSpan(position, position + end.Value)
-                : new TextSpan(position, span.Length);
+                : new TextSpan(position, current.Length);
             builder.Add(textSpan);
 
-            if (end is null || end.Value >= span.Length) break;
+            if (end is null || end.Value >= current.Length) break;
             
             position += end.Value;
-            span = span[end.Value..];
+            current = current[end.Value..];
         }
 
         return new(builder.ToImmutable(), span.Length);
