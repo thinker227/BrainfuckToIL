@@ -1,6 +1,16 @@
-# Brainfuck to IL
+<h1 align="center">Brainfuck to IL</h1>
 
-A simplistic [Brainfuck](https://esolangs.org/wiki/Brainfuck) to IL compiler.
+<p align="center">
+    A simplistic <a href="https://esolangs.org/wiki/Brainfuck">Brainfuck</a> to IL compiler.
+</p>
+
+<p align="center">
+    <a href="https://github.com/thinker227/BrainfuckToIL/actions/workflows/build.yaml">
+        <img src="https://img.shields.io/github/actions/workflow/status/thinker227/BrainfuckToIL/build.yaml?branch=main&logo=github&label=build&style=for-the-badge"/>
+    </a>
+</p>
+
+<br/>
 
 ## Installation
 
