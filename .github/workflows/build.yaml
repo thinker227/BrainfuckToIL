@@ -1,0 +1,46 @@
+name: build
+
+on:
+  workflow_dispatch:
+  
+  push:
+    paths:
+    - 'src/**'
+    
+  pull-request:
+    branches:
+    - main
+    paths:
+    - 'src/**'
+
+env:
+  DOTNET_VERSION: '7.0.105'
+
+jobs:
+  build:
+    name: build-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os:
+        - ubuntu-latest
+        - windows-latest
+        - macOS-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install dependencies
+      run: dotnet restore ./BrainfuckToIL.sln
+
+    - name: Build
+      run: dotnet build ./BrainfuckToIL.sln -c Release --no-restore
