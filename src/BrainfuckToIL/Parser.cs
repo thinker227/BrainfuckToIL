@@ -130,7 +130,7 @@ public sealed class Parser
                 var loopStartPosition = loop.StartPosition;
                 
                 var error = new Error(
-                    "Unterminated loop.",
+                    "Unterminated loop",
                     new(loopStartPosition));
                 
                 var loopInstructions = loop.Instructions.ToImmutable();
@@ -319,7 +319,7 @@ public sealed class Parser
                 // then it's a loop ending with no corresponding loop start.
             
                 var error = new Error(
-                    "Encountered loop ending with no loop start.",
+                    "Encountered loop ending with no loop start",
                     new(position));
 
                 // Return an error instruction since there's no better kind of instruction to return here.
