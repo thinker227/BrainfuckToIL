@@ -7,8 +7,9 @@ namespace BrainfuckToIL.Cli;
 
 internal static class CommandLine
 {
-    public static CommandLineParser GetParser(RootCommand rootCommand, IAnsiConsole console)
+    public static CommandLineParser GetParser(IAnsiConsole console)
     {
+        var rootCommand = GetRootCommand();
         var builder = new CommandLineBuilder(rootCommand);
         
         builder.UseDefaults();
@@ -22,7 +23,7 @@ internal static class CommandLine
         return builder.Build();
     }
 
-    public static RootCommand GetRootCommand()
+    private static RootCommand GetRootCommand()
     {
         var rootCommand = new RootCommand()
         {

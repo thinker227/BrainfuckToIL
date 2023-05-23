@@ -4,6 +4,5 @@ using BrainfuckToIL.Cli;
 
 var console = AnsiConsole.Console;
 
-var rootCommand = CommandLine.GetRootCommand();
-var parser = CommandLine.GetParser(rootCommand, console);
+var parser = CommandLine.GetParser(console);
 parser.Invoke(args);
