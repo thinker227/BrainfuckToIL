@@ -2,12 +2,12 @@
 
 A simplistic [Brainfuck](https://esolangs.org/wiki/Brainfuck) to IL compiler.
 
-# Installation
+## Installation
 
 > **Note**
-> The [.NET 7.0 SDK](https://dotnet.microsoft.com/en-us/) is required to install this tool.
+> The [.NET 7.0 SDK](https://dotnet.microsoft.com/en-us/) is required to install and run this tool.
 
-## Build from source
+### Build from source
 
 Run the following commands in your favorite terminal:
 ```ps1
@@ -16,15 +16,19 @@ cd BrainfuckToIL
 ./install-tool.ps1
 ```
 
-## Install from Nuget
+### Install from Nuget
 
 A Nuget package is currently not available.
 
-# Usage
+## Usage
 
 Compile a Brainfuck file to a .NET executable:
 ```ps1
+# Compile source file
 bftoil compile foo.bf
+
+# Run output executable
+./foo.exe
 ```
 
 You can alternatively specify whether to output a DLL or exe, of which exe is the default:
