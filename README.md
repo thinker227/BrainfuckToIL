@@ -10,8 +10,6 @@
     </a>
 </p>
 
-<br/>
-
 ## Installation
 
 > **Note**
