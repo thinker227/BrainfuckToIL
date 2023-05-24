@@ -182,6 +182,8 @@ internal sealed class InstructionEmitter
     {
         EmitReadCurrentMemory();
         
+        // Converts the current value to a char.
+        // Apparently a ushort is equivalent to a char.
         il.OpCode(ILOpCode.Conv_u2);
         
         il.Call(prerequisites.SystemConsoleWriteChar);
