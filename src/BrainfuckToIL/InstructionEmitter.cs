@@ -13,7 +13,7 @@ internal sealed class InstructionEmitter
     private readonly MetadataBuilder metadata;
     private readonly InstructionEncoder il;
     private readonly LocalVariablesEncoder locals;
-    private readonly Types types;
+    private readonly EmitPrerequisites prerequisites;
 
     private const int MemorySize = 30_000;
     private const int MemorySlot = 0;
@@ -24,13 +24,13 @@ internal sealed class InstructionEmitter
         MetadataBuilder metadata,
         InstructionEncoder il,
         LocalVariablesEncoder locals,
-        Types types)
+        EmitPrerequisites prerequisites)
     {
         this.instructions = instructions;
         this.metadata = metadata;
         this.il = il;
         this.locals = locals;
-        this.types = types;
+        this.prerequisites = prerequisites;
     }
 
     public static void Emit(
@@ -38,9 +38,9 @@ internal sealed class InstructionEmitter
         MetadataBuilder metadata,
         InstructionEncoder il,
         LocalVariablesEncoder locals,
-        Types types)
+        EmitPrerequisites prerequisites)
     {
-        var emitter = new InstructionEmitter(instructions, metadata, il, locals, types);
+        var emitter = new InstructionEmitter(instructions, metadata, il, locals, prerequisites);
         
         emitter.EmitHeader();
         emitter.EmitInstructions();
@@ -68,7 +68,7 @@ internal sealed class InstructionEmitter
         // Create an array of 30,000 bytes and store it into a local variable. 
         il.LoadConstantI4(MemorySize);
         il.OpCode(ILOpCode.Newarr);
-        il.Token(types.Byte);
+        il.Token(prerequisites.SystemByte);
         il.StoreLocal(MemorySlot);
 
         // Initialize the data pointer local variable to 0.
@@ -139,7 +139,7 @@ internal sealed class InstructionEmitter
         // Load the address of the element in the memory array at the index of the data pointer.
         il.LoadLocal(DataPointerSlot);
         il.OpCode(ILOpCode.Ldelema);
-        il.Token(types.Byte);
+        il.Token(prerequisites.SystemByte);
         
         // Duplicate the the address, one for the read and one for the write.
         il.OpCode(ILOpCode.Dup);
@@ -176,9 +176,16 @@ internal sealed class InstructionEmitter
         il.StoreLocal(DataPointerSlot);
     }
 
-    private void EmitInput() {}
+    private void EmitInput() => throw new NotImplementedException();
 
-    private void EmitOutput() {}
+    private void EmitOutput()
+    {
+        EmitReadCurrentMemory();
+        
+        il.OpCode(ILOpCode.Conv_u2);
+        
+        il.Call(prerequisites.SystemConsoleWriteChar);
+    }
 
     private void EmitLoop(Instruction.Loop loop)
     {

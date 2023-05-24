@@ -202,7 +202,7 @@ public sealed class Emitter
         var locals = new BlobEncoder(localsBuilder).LocalVariableSignature(2);
 
         // Let the magic happen!
-        InstructionEmitter.Emit(instructions, metadata, il, locals, GetTypes());
+        InstructionEmitter.Emit(instructions, metadata, il, locals, prerequisites);
 
         var mainBodyOffset = methodBodyStream.AddMethodBody(
             il, localVariablesSignature: metadata.AddStandaloneSignature(metadata.GetOrAddBlob(localsBuilder)));
@@ -210,12 +210,6 @@ public sealed class Emitter
 
         return mainBodyOffset;
     }
-    
-    private InstructionEmitter.Types GetTypes() => new(
-        metadata.AddTypeReference(
-            prerequisites.Corelib,
-            metadata.GetOrAddString("System"),
-            metadata.GetOrAddString("Byte")));
 
     private void CreateModuleType(MethodDefinitionHandle mainMethod) =>
         metadata.AddTypeDefinition(
