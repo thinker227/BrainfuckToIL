@@ -1,4 +1,6 @@
-﻿namespace BrainfuckToIL.Cli;
+﻿using BrainfuckToIL.Emit;
+
+namespace BrainfuckToIL.Cli;
 
 // This is just to provide better names for the output kind CLI option.
 internal enum DisplayOutputKind

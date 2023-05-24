@@ -1,4 +1,4 @@
-﻿namespace BrainfuckToIL;
+﻿namespace BrainfuckToIL.Emit;
 
 /// <summary>
 /// Options for an <see cref="Emitter"/>.

@@ -1,7 +1,7 @@
 ﻿using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 
-namespace BrainfuckToIL;
+namespace BrainfuckToIL.Emit;
 
 /// <summary>
 /// Prerequisite assembly/type/member references for <see cref="Emitter"/> to function.

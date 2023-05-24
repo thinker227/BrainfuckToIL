@@ -1,4 +1,4 @@
-﻿namespace BrainfuckToIL;
+﻿namespace BrainfuckToIL.Parsing;
 
 /// <summary>
 /// Options for a <see cref="Parser"/>.

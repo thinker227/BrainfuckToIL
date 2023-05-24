@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Reflection;
 using Spectre.Console;
+using BrainfuckToIL.Emit;
 
 namespace BrainfuckToIL.Cli.Handlers;
 

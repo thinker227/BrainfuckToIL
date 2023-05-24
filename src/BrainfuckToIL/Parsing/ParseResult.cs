@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace BrainfuckToIL;
+namespace BrainfuckToIL.Parsing;
 
 /// <summary>
 /// The result of a parse operation.

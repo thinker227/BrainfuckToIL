@@ -2,7 +2,7 @@
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 
-namespace BrainfuckToIL;
+namespace BrainfuckToIL.Emit;
 
 internal sealed class InstructionEmitter
 {
@@ -178,6 +178,7 @@ internal sealed class InstructionEmitter
         il.LoadLocal(MemorySlot);
         il.LoadLocal(DataPointerSlot);
         
+        // TODO: Use custom read method instead to allow enter to be treated as a null terminator.
         // Call Console.Read() and convert value to a byte (allowing overflow).
         il.Call(prerequisites.SystemConsoleRead);
         il.OpCode(ILOpCode.Conv_u1);

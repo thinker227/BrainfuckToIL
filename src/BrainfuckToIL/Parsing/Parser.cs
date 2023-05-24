@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace BrainfuckToIL;
+namespace BrainfuckToIL.Parsing;
 
 /// <summary>
 /// A parser from a sequence of characters to a series of instructions.
