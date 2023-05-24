@@ -6,9 +6,6 @@ namespace BrainfuckToIL;
 
 internal sealed class InstructionEmitter
 {
-    public readonly record struct Types(
-        TypeReferenceHandle Byte);
-
     private readonly IReadOnlyList<Instruction> instructions;
     private readonly MetadataBuilder metadata;
     private readonly InstructionEncoder il;
