@@ -18,7 +18,7 @@ public static class InstructionExtensions
 
             if (instruction is not Instruction.Loop loop) continue;
 
-            foreach (var loopInstruction in loop.Instructions) yield return loopInstruction;
+            foreach (var loopInstruction in loop.Instructions.Flatten()) yield return loopInstruction;
         }
     }
 }
