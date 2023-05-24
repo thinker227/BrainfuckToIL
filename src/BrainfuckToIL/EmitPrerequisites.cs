@@ -38,6 +38,11 @@ internal readonly struct EmitPrerequisites
     /// </summary>
     public required MemberReferenceHandle SystemConsoleWriteChar { get; init; }
     
+    /// <summary>
+    /// Member reference to <see cref="Console.Read"/>.
+    /// </summary>
+    public required MemberReferenceHandle SystemConsoleRead { get; init; }
+    
     public static EmitPrerequisites Create(MetadataBuilder metadata)
     {
         var corelib = metadata.AddAssemblyReference(
@@ -66,8 +71,8 @@ internal readonly struct EmitPrerequisites
             metadata.GetOrAddString("Console"));
         
         // Create the signature for a parameterless constructor.
-        var parameterlessCtorSignature = new BlobBuilder();
-        new BlobEncoder(parameterlessCtorSignature)
+        var voidNoArgsSignature = new BlobBuilder();
+        new BlobEncoder(voidNoArgsSignature)
             .MethodSignature(isInstanceMethod: true)
             .Parameters(0, 
                 ret => ret.Void(),
@@ -76,7 +81,7 @@ internal readonly struct EmitPrerequisites
         var systemObjectCtor = metadata.AddMemberReference(
             systemObject,
             metadata.GetOrAddString(".ctor"),
-            metadata.GetOrAddBlob(parameterlessCtorSignature));
+            metadata.GetOrAddBlob(voidNoArgsSignature));
 
         var systemConsoleWriteCharSignature = new BlobBuilder();
         new BlobEncoder(systemConsoleWriteCharSignature)
@@ -90,14 +95,27 @@ internal readonly struct EmitPrerequisites
             metadata.GetOrAddString("Write"),
             metadata.GetOrAddBlob(systemConsoleWriteCharSignature));
 
+        var systemConsoleReadSignature = new BlobBuilder();
+        new BlobEncoder(systemConsoleReadSignature)
+            .MethodSignature(isInstanceMethod: false)
+            .Parameters(0,
+                ret => ret.Type().Int32(),
+                _ => {});
+
+        var systemConsoleRead = metadata.AddMemberReference(
+            systemConsole,
+            metadata.GetOrAddString("Read"),
+            metadata.GetOrAddBlob(systemConsoleReadSignature));
+
         return new()
         {
             Corelib = corelib,
             SystemObject = systemObject,
             SystemByte = systemByte,
-            ParameterlessCtor = metadata.GetOrAddBlob(parameterlessCtorSignature),
+            ParameterlessCtor = metadata.GetOrAddBlob(voidNoArgsSignature),
             SystemObjectCtor = systemObjectCtor,
-            SystemConsoleWriteChar = systemConsoleWriteChar
+            SystemConsoleWriteChar = systemConsoleWriteChar,
+            SystemConsoleRead = systemConsoleRead
         };
     }
 }

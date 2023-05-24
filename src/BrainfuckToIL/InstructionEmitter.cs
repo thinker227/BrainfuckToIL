@@ -173,7 +173,18 @@ internal sealed class InstructionEmitter
         il.StoreLocal(DataPointerSlot);
     }
 
-    private void EmitInput() => throw new NotImplementedException();
+    private void EmitInput()
+    {
+        il.LoadLocal(MemorySlot);
+        il.LoadLocal(DataPointerSlot);
+        
+        // Call Console.Read() and convert value to a byte (allowing overflow).
+        il.Call(prerequisites.SystemConsoleRead);
+        il.OpCode(ILOpCode.Conv_u1);
+        
+        // Store value into memory.
+        il.OpCode(ILOpCode.Stelem_i1);
+    }
 
     private void EmitOutput()
     {
