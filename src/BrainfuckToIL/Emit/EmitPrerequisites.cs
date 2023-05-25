@@ -39,9 +39,14 @@ internal readonly struct EmitPrerequisites
     public required MemberReferenceHandle SystemConsoleWriteChar { get; init; }
     
     /// <summary>
-    /// Member reference to <see cref="Console.Read"/>.
+    /// Member reference to <see cref="Console.ReadKey(bool)"/>.
     /// </summary>
-    public required MemberReferenceHandle SystemConsoleRead { get; init; }
+    public required MemberReferenceHandle SystemConsoleReadKeyBool { get; init; }
+    
+    /// <summary>
+    /// Member reference to <see cref="Console.WriteLine()"/>.
+    /// </summary>
+    public required MemberReferenceHandle SystemConsoleWriteLine { get; init; }
     
     public static EmitPrerequisites Create(MetadataBuilder metadata)
     {
@@ -69,6 +74,11 @@ internal readonly struct EmitPrerequisites
             corelib,
             metadata.GetOrAddString("System"),
             metadata.GetOrAddString("Console"));
+
+        var systemConsoleKeyInfo = metadata.AddTypeReference(
+            corelib,
+            metadata.GetOrAddString("System"),
+            metadata.GetOrAddString("ConsoleKeyInfo"));
         
         // Create the signature for a parameterless constructor.
         var voidNoArgsSignature = new BlobBuilder();
@@ -95,17 +105,31 @@ internal readonly struct EmitPrerequisites
             metadata.GetOrAddString("Write"),
             metadata.GetOrAddBlob(systemConsoleWriteCharSignature));
 
-        var systemConsoleReadSignature = new BlobBuilder();
-        new BlobEncoder(systemConsoleReadSignature)
+        var systemConsoleWriteLineSignature = new BlobBuilder();
+        new BlobEncoder(systemConsoleWriteLineSignature)
             .MethodSignature(isInstanceMethod: false)
             .Parameters(0,
-                ret => ret.Type().Int32(),
+                ret => ret.Void(),
                 _ => {});
 
-        var systemConsoleRead = metadata.AddMemberReference(
+        var systemConsoleWriteLine = metadata.AddMemberReference(
             systemConsole,
-            metadata.GetOrAddString("Read"),
-            metadata.GetOrAddBlob(systemConsoleReadSignature));
+            metadata.GetOrAddString("WriteLine"),
+            metadata.GetOrAddBlob(systemConsoleWriteCharSignature));
+
+        var systemConsoleReadKeyBoolSignature = new BlobBuilder();
+        new BlobEncoder(systemConsoleReadKeyBoolSignature)
+            .MethodSignature(isInstanceMethod: false)
+            .Parameters(0,
+                ret => ret.Type().Type(
+                    systemConsoleKeyInfo,
+                    isValueType: true),
+                parameters => parameters.AddParameter().Type().Boolean());
+
+        var systemConsoleReadKeyBool = metadata.AddMemberReference(
+            systemConsoleKeyInfo,
+            metadata.GetOrAddString("ReadKey"),
+            metadata.GetOrAddBlob(systemConsoleReadKeyBoolSignature));
 
         return new()
         {
@@ -115,7 +139,8 @@ internal readonly struct EmitPrerequisites
             ParameterlessCtor = metadata.GetOrAddBlob(voidNoArgsSignature),
             SystemObjectCtor = systemObjectCtor,
             SystemConsoleWriteChar = systemConsoleWriteChar,
-            SystemConsoleRead = systemConsoleRead
+            SystemConsoleWriteLine = systemConsoleWriteLine,
+            SystemConsoleReadKeyBool = systemConsoleReadKeyBool,
         };
     }
 }
