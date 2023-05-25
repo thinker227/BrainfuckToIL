@@ -11,33 +11,35 @@ internal sealed class InstructionEmitter
     private readonly InstructionEncoder il;
     private readonly LocalVariablesEncoder locals;
     private readonly EmitPrerequisites prerequisites;
+    private readonly MethodDefinitionHandle readMethod;
 
     private const int MemorySize = 30_000;
     private const int MemorySlot = 0;
     private const int DataPointerSlot = 1;
 
-    private InstructionEmitter(
-        IReadOnlyList<Instruction> instructions,
+    private InstructionEmitter(IReadOnlyList<Instruction> instructions,
         MetadataBuilder metadata,
         InstructionEncoder il,
         LocalVariablesEncoder locals,
-        EmitPrerequisites prerequisites)
+        EmitPrerequisites prerequisites,
+        MethodDefinitionHandle readMethod)
     {
         this.instructions = instructions;
         this.metadata = metadata;
         this.il = il;
         this.locals = locals;
         this.prerequisites = prerequisites;
+        this.readMethod = readMethod;
     }
 
-    public static void Emit(
-        IReadOnlyList<Instruction> instructions,
+    public static void Emit(IReadOnlyList<Instruction> instructions,
         MetadataBuilder metadata,
         InstructionEncoder il,
         LocalVariablesEncoder locals,
-        EmitPrerequisites prerequisites)
+        EmitPrerequisites prerequisites,
+        MethodDefinitionHandle readMethod)
     {
-        var emitter = new InstructionEmitter(instructions, metadata, il, locals, prerequisites);
+        var emitter = new InstructionEmitter(instructions, metadata, il, locals, prerequisites, readMethod);
         
         emitter.EmitHeader();
         emitter.EmitInstructions();
@@ -178,10 +180,7 @@ internal sealed class InstructionEmitter
         il.LoadLocal(MemorySlot);
         il.LoadLocal(DataPointerSlot);
         
-        // TODO: Use custom read method instead to allow enter to be treated as a null terminator.
-        // Call Console.Read() and convert value to a byte (allowing overflow).
-        il.Call(prerequisites.SystemConsoleRead);
-        il.OpCode(ILOpCode.Conv_u1);
+        il.Call(readMethod);
         
         // Store value into memory.
         il.OpCode(ILOpCode.Stelem_i1);

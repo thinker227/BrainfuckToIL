@@ -92,10 +92,12 @@ public sealed class Emitter
         CreateModuleAndAssembly();
 
         CreateCtor();
-        var main = CreateMain();
+        var read = CreateRead();
+        var main = CreateMain(read);
         
-        CreateModuleType(main);
-        CreateProgramType(main);
+        // Read is the first method emitted in the type(s).
+        CreateModuleType(read);
+        CreateProgramType(read);
 
         return main;
     }
@@ -164,7 +166,75 @@ public sealed class Emitter
         return bodyOffset;
     }
 
-    private MethodDefinitionHandle CreateMain()
+    private MethodDefinitionHandle CreateRead()
+    {
+        var bodyOffset = EmitRead();
+
+        var signature = metadata.CreateSignature(
+            isInstanceMethod: false,
+            signature: sig => sig
+                .Parameters(0,
+                    ret => ret.Type().Byte(),
+                    _ => {}));
+
+        var method = metadata.AddMethodDefinition(
+            attributes: MethodAttributes.Private |
+                        MethodAttributes.Static |
+                        MethodAttributes.HideBySig,
+            implAttributes: MethodImplAttributes.IL,
+            name: metadata.GetOrAddString("Read"),
+            signature: signature,
+            bodyOffset: bodyOffset,
+            parameterList: default);
+
+        return method;
+    }
+
+    private int EmitRead()
+    {
+        var codeBuilder = new BlobBuilder();
+        var flowBuilder = new ControlFlowBuilder();
+        var il = new InstructionEncoder(codeBuilder, flowBuilder);
+
+        var localsBuilder = new BlobBuilder();
+        var locals = new BlobEncoder(localsBuilder).LocalVariableSignature(1);
+
+        locals.AddVariable()
+            .Type().Type(prerequisites.SystemConsoleKeyInfo, true);
+        const int localSlot = 0;
+        
+        // Load true or false depending on the input format.
+        il.LoadConstantI4(options.InputFormat switch
+        {
+            InputFormat.Hidden => 1,
+            InputFormat.Shown or InputFormat.Newline => 0,
+            _ => throw new UnreachableException()
+        });
+        
+        // Call System.Console.ReadKey(bool).
+        il.Call(prerequisites.SystemConsoleReadKeyBool);
+        
+        // Store key info into local variable.
+        il.StoreLocal(localSlot);
+        
+        // Load address of local variable into order to get KeyChar.
+        il.LoadLocalAddress(localSlot);
+        
+        // Get the KeyChar.
+        il.Call(prerequisites.SystemConsoleKeyInfoKeyCharGet);
+        
+        // Convert the character to a byte.
+        il.OpCode(ILOpCode.Conv_u1);
+        
+        il.OpCode(ILOpCode.Ret);
+        
+        var bodyOffset = methodBodyStream.AddMethodBody(
+            il, localVariablesSignature: metadata.AddStandaloneSignature(metadata.GetOrAddBlob(localsBuilder)));
+
+        return bodyOffset;
+    }
+
+    private MethodDefinitionHandle CreateMain(MethodDefinitionHandle read)
     {
         // Create the signature for the main method.
         var signature = new BlobBuilder();
@@ -175,7 +245,7 @@ public sealed class Emitter
                 _ => {});
         
         // Get the body for the entry point method.
-        var bodyOffset = EmitMain();
+        var bodyOffset = EmitMain(read);
 
         // Create the entry point method.
         var method = metadata.AddMethodDefinition(
@@ -192,7 +262,7 @@ public sealed class Emitter
         return method;
     }
 
-    private int EmitMain()
+    private int EmitMain(MethodDefinitionHandle read)
     {
         var codeBuilder = new BlobBuilder();
         var flowBuilder = new ControlFlowBuilder();
@@ -202,7 +272,7 @@ public sealed class Emitter
         var locals = new BlobEncoder(localsBuilder).LocalVariableSignature(2);
 
         // Let the magic happen!
-        InstructionEmitter.Emit(instructions, metadata, il, locals, prerequisites);
+        InstructionEmitter.Emit(instructions, metadata, il, locals, prerequisites, read);
 
         var mainBodyOffset = methodBodyStream.AddMethodBody(
             il, localVariablesSignature: metadata.AddStandaloneSignature(metadata.GetOrAddBlob(localsBuilder)));
@@ -221,7 +291,7 @@ public sealed class Emitter
             // No idea why the main method has to be specified in both <Module> and the program type.
             methodList: mainMethod);
 
-    private void CreateProgramType(MethodDefinitionHandle mainMethod) =>
+    private void CreateProgramType(MethodDefinitionHandle readMethod) =>
         metadata.AddTypeDefinition(
             attributes: TypeAttributes.Class |
                         TypeAttributes.Public |
@@ -231,5 +301,5 @@ public sealed class Emitter
             metadata.GetOrAddString(options.TypeName),
             baseType: prerequisites.SystemObject,
             fieldList: MetadataTokens.FieldDefinitionHandle(1),
-            mainMethod);
+            readMethod);
 }

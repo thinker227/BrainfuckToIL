@@ -24,6 +24,11 @@ internal readonly struct EmitPrerequisites
     public required TypeReferenceHandle SystemByte { get; init; }
     
     /// <summary>
+    /// Type reference to <see cref="ConsoleKeyInfo"/>.
+    /// </summary>
+    public required TypeReferenceHandle SystemConsoleKeyInfo { get; init; }
+    
+    /// <summary>
     /// Handle to the method signature for a parameterless constructor.
     /// </summary>
     public required BlobHandle ParameterlessCtor { get; init; }
@@ -47,6 +52,11 @@ internal readonly struct EmitPrerequisites
     /// Member reference to <see cref="Console.WriteLine()"/>.
     /// </summary>
     public required MemberReferenceHandle SystemConsoleWriteLine { get; init; }
+    
+    /// <summary>
+    /// Member reference to the getter of <see cref="ConsoleKeyInfo.KeyChar"/>.
+    /// </summary>
+    public required MemberReferenceHandle SystemConsoleKeyInfoKeyCharGet { get; init; }
     
     public static EmitPrerequisites Create(MetadataBuilder metadata)
     {
@@ -113,22 +123,33 @@ internal readonly struct EmitPrerequisites
             containingType: systemConsole,
             isInstanceMethod: false,
             signature: sig => sig
-                .Parameters(0,
+                .Parameters(1,
                     ret => ret.Type().Type(
                         systemConsoleKeyInfo,
                         isValueType: true),
                     parameters => parameters.AddParameter().Type().Boolean()));
+
+        var (_, systemConsoleKeyInfoKeyCharGet) = metadata.GetMethod(
+            name: "get_KeyChar",
+            containingType: systemConsoleKeyInfo,
+            isInstanceMethod: true,
+            signature: sig => sig
+                .Parameters(0,
+                    ret => ret.Type().Char(),
+                    _ => {}));
 
         return new()
         {
             Corelib = corelib,
             SystemObject = systemObject,
             SystemByte = systemByte,
+            SystemConsoleKeyInfo = systemConsoleKeyInfo,
             ParameterlessCtor = parameterlessCtor,
             SystemObjectCtor = systemObjectCtor,
             SystemConsoleWriteChar = systemConsoleWriteChar,
             SystemConsoleWriteLine = systemConsoleWriteLine,
             SystemConsoleReadKeyBool = systemConsoleReadKeyBool,
+            SystemConsoleKeyInfoKeyCharGet = systemConsoleKeyInfoKeyCharGet
         };
     }
 }
