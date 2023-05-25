@@ -10,14 +10,14 @@ internal static class CommandLine
 {
     public static CommandLineParser GetParser()
     {
-        var (rootCommand, plainOption) = GetRootCommand();
+        var rootCommand = GetRootCommand();
         var builder = new CommandLineBuilder(rootCommand);
         
         builder.UseDefaults();
         
         builder.AddMiddleware(ctx =>
         {
-            var plain = ctx.ParseResult.GetValueForOption(plainOption);
+            var plain = ctx.ParseResult.GetValueForOptionWithName<bool>("plain");
 
             var console = AnsiConsole.Create(new AnsiConsoleSettings()
             {
@@ -33,7 +33,7 @@ internal static class CommandLine
         return builder.Build();
     }
 
-    private static (RootCommand, Option<bool>) GetRootCommand()
+    private static RootCommand GetRootCommand()
     {
         var rootCommand = new RootCommand()
         {
@@ -53,7 +53,7 @@ internal static class CommandLine
         var runCommand = RunCommand();
         rootCommand.AddCommand(runCommand);
 
-        return (rootCommand, plainOption);
+        return rootCommand;
     }
 
     private static Command CompileCommand()
