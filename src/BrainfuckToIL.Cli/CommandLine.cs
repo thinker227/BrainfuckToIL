@@ -1,6 +1,7 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
+using System.CommandLine.Parsing;
 using Spectre.Console;
 using BrainfuckToIL.Cli.Handlers;
 
@@ -47,6 +48,15 @@ internal static class CommandLine
         };
         rootCommand.AddGlobalOption(plainOption);
 
+        var memorySizeOption = new Option<int>("--memory-size")
+        {
+            Description = "The size of the memory in the amount of cells long it is."
+        };
+        memorySizeOption.AddAlias("-m");
+        memorySizeOption.SetDefaultValue(30_000);
+        memorySizeOption.AddValidator(MemorySizeValidator);
+        rootCommand.AddGlobalOption(memorySizeOption);
+
         var compileCommand = CompileCommand();
         rootCommand.AddCommand(compileCommand);
 
@@ -54,6 +64,16 @@ internal static class CommandLine
         rootCommand.AddCommand(runCommand);
 
         return rootCommand;
+    }
+
+    private static void MemorySizeValidator(OptionResult result)
+    {
+        var value = result.GetValueOrDefault<int>();
+
+        if (value <= 0)
+        {
+            result.ErrorMessage = "Memory size cannot be less than or equal to 0.";
+        }
     }
 
     private static Command CompileCommand()
@@ -100,7 +120,8 @@ internal static class CommandLine
             ctx.ExitCode = handler.Handle(
                 ctx.ParseResult.GetValueForArgument(sourceArgument),
                 ctx.ParseResult.GetValueForArgument(outputArgument),
-                ctx.ParseResult.GetValueForOption(outputKindOption));
+                ctx.ParseResult.GetValueForOption(outputKindOption),
+                ctx.ParseResult.GetValueForOptionWithName<int>("memory-size"));
         });
 
         return command;
@@ -127,7 +148,8 @@ internal static class CommandLine
                 ctx.BindingContext.GetRequiredService<IAnsiConsole>());
             
             ctx.ExitCode = handler.Handle(
-                ctx.ParseResult.GetValueForArgument(sourceArgument));
+                ctx.ParseResult.GetValueForArgument(sourceArgument),
+                ctx.ParseResult.GetValueForOptionWithName<int>("memory-size"));
         });
 
         return command;

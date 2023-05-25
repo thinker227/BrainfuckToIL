@@ -10,7 +10,7 @@ internal sealed class Compile
 
     public Compile(IAnsiConsole console) => this.console = console;
 
-    public int Handle(FileInfo sourceFile, FileSystemInfo? destination, DisplayOutputKind outputKind)
+    public int Handle(FileInfo sourceFile, FileSystemInfo? destination, DisplayOutputKind outputKind, int memorySize)
     {
         var outputFile = Files.GetOrCreateOutputFile(sourceFile, destination, outputKind);
         var outputFileName = Path.GetFileNameWithoutExtension(outputFile.Name);
@@ -31,7 +31,8 @@ internal sealed class Compile
         Emitter.Emit(result.Instructions, outputStream, new EmitOptions()
         {
             AssemblyName = outputFileName,
-            OutputKind = outputKind.ToCoreOutputKind()
+            OutputKind = outputKind.ToCoreOutputKind(),
+            MemorySize = memorySize
         });
 
         return 0;

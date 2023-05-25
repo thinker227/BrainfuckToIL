@@ -11,7 +11,7 @@ internal sealed class Run
 
     public Run(IAnsiConsole console) => this.console = console;
 
-    public int Handle(FileInfo sourceFile)
+    public int Handle(FileInfo sourceFile, int memorySize)
     {
         var sourceFileName = Path.GetFileNameWithoutExtension(sourceFile.Name);
     
@@ -29,7 +29,8 @@ internal sealed class Run
         Emitter.Emit(result.Instructions, stream, new EmitOptions()
         {
             AssemblyName = sourceFileName,
-            OutputKind = OutputKind.Dll
+            OutputKind = OutputKind.Dll,
+            MemorySize = memorySize
         });
         var bytes = stream.ToArray();
 
