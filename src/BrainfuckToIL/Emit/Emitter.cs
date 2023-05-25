@@ -213,22 +213,10 @@ public sealed class Emitter
         
         // Yes this was painful to write, why'd you ask?
         
-        // Load true or false depending on the input format.
-        il.LoadConstantI4(options.InputFormat switch
-        {
-            InputFormat.Hidden => 1,
-            InputFormat.Shown or InputFormat.Newline => 0,
-            _ => throw new UnreachableException()
-        });
-        
-        // Call System.Console.ReadKey(bool) and store it into a local variable.
+        // Call System.Console.ReadKey(true) and store it into a local variable.
+        il.LoadConstantI4(1);
         il.Call(prerequisites.SystemConsoleReadKeyBool);
         il.StoreLocal(localSlot);
-
-        Console.ReadKey();
-        
-        if (options.InputFormat == InputFormat.Newline)
-            il.Call(prerequisites.SystemConsoleWriteLine);
 
         // Define a label and branch to it if the value of info.Key is not ConsoleKey.Enter.
         il.LoadLocalAddress(localSlot);
@@ -243,9 +231,21 @@ public sealed class Emitter
         
         il.MarkLabel(label);
         
-        // Return info.KeyChar.
+        // Get info.KeyChar.
         il.LoadLocalAddress(localSlot);
         il.Call(prerequisites.SystemConsoleKeyInfoKeyCharGet);
+
+        // If the input should not be hidden, write it.
+        if (options.InputFormat != InputFormat.Hidden)
+        {
+            il.OpCode(ILOpCode.Dup);
+            il.Call(prerequisites.SystemConsoleWriteChar);
+        }
+
+        // If a newline should be appended, do that.
+        if (options.InputFormat == InputFormat.Newline)
+            il.Call(prerequisites.SystemConsoleWriteLine);
+
         il.OpCode(ILOpCode.Conv_u1);
         il.OpCode(ILOpCode.Ret);
         
