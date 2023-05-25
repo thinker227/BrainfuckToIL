@@ -161,13 +161,6 @@ internal sealed class InstructionEmitter
         
         // Add or subtract.
         EmitAddOrSubtract(value);
-
-        // Call rem if wrapping is enabled.
-        if (options.WrapMemory)
-        {
-            il.LoadConstantI4(options.MemorySize);
-            il.OpCode(ILOpCode.Rem);
-        }
         
         // Convert the result of the addition/subtraction into a byte.
         il.OpCode(ILOpCode.Conv_u1);
@@ -184,11 +177,23 @@ internal sealed class InstructionEmitter
         
         // Load the data pointer onto the stack.
         il.LoadLocal(DataPointerSlot);
-        
-        // TODO: Bounds checking.
-        
+            
         // Add or subtract.
         EmitAddOrSubtract(distance);
+        
+        // Memory wrapping.
+        if (options.WrapMemory)
+        {
+            // (x % m + m) % m
+            // https://stackoverflow.com/questions/1082917/mod-of-negative-number-is-melting-my-brain
+            
+            il.LoadConstantI4(options.MemorySize);
+            il.OpCode(ILOpCode.Rem);
+            il.LoadConstantI4(options.MemorySize);
+            il.OpCode(ILOpCode.Add);
+            il.LoadConstantI4(options.MemorySize);
+            il.OpCode(ILOpCode.Rem);
+        }
         
         // Store the result back into the data pointer.
         il.StoreLocal(DataPointerSlot);
