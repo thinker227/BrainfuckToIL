@@ -7,6 +7,7 @@ namespace BrainfuckToIL.Emit;
 internal sealed class InstructionEmitter
 {
     private readonly IReadOnlyList<Instruction> instructions;
+    private readonly EmitOptions options;
     private readonly MetadataBuilder metadata;
     private readonly InstructionEncoder il;
     private readonly LocalVariablesEncoder locals;
@@ -17,7 +18,9 @@ internal sealed class InstructionEmitter
     private const int MemorySlot = 0;
     private const int DataPointerSlot = 1;
 
-    private InstructionEmitter(IReadOnlyList<Instruction> instructions,
+    private InstructionEmitter(
+        IReadOnlyList<Instruction> instructions,
+        EmitOptions options,
         MetadataBuilder metadata,
         InstructionEncoder il,
         LocalVariablesEncoder locals,
@@ -25,6 +28,7 @@ internal sealed class InstructionEmitter
         MethodDefinitionHandle readMethod)
     {
         this.instructions = instructions;
+        this.options = options;
         this.metadata = metadata;
         this.il = il;
         this.locals = locals;
@@ -32,14 +36,23 @@ internal sealed class InstructionEmitter
         this.readMethod = readMethod;
     }
 
-    public static void Emit(IReadOnlyList<Instruction> instructions,
+    public static void Emit(
+        IReadOnlyList<Instruction> instructions,
+        EmitOptions options,
         MetadataBuilder metadata,
         InstructionEncoder il,
         LocalVariablesEncoder locals,
         EmitPrerequisites prerequisites,
         MethodDefinitionHandle readMethod)
     {
-        var emitter = new InstructionEmitter(instructions, metadata, il, locals, prerequisites, readMethod);
+        var emitter = new InstructionEmitter(
+            instructions,
+            options,
+            metadata,
+            il,
+            locals,
+            prerequisites,
+            readMethod);
         
         emitter.EmitHeader();
         emitter.EmitInstructions();

@@ -293,7 +293,7 @@ public sealed class Emitter
         var locals = new BlobEncoder(localsBuilder).LocalVariableSignature(2);
 
         // Let the magic happen!
-        InstructionEmitter.Emit(instructions, metadata, il, locals, prerequisites, read);
+        InstructionEmitter.Emit(instructions, options, metadata, il, locals, prerequisites, read);
 
         var mainBodyOffset = methodBodyStream.AddMethodBody(
             il, localVariablesSignature: metadata.AddStandaloneSignature(metadata.GetOrAddBlob(localsBuilder)));
