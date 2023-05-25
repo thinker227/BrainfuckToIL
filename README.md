@@ -63,3 +63,5 @@ Run a Brainfuck file without having to compile to an executable file first:
 ```ps1
 bftoil run qux.bf
 ```
+
+See the [CLI docs](./cliDocs.md) for a more extensive overview of commands.
