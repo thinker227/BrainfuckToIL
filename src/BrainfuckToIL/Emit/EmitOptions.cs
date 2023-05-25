@@ -15,6 +15,11 @@ public readonly struct EmitOptions
     /// Default is <see cref="BrainfuckToIL.Emit.InputFormat.Newline"/>.
     /// </summary>
     public InputFormat InputFormat { get; init; } = InputFormat.Newline;
+
+    /// <summary>
+    /// Whether to wrap around the memory if the pointer goes outside the bounds of the memory.
+    /// </summary>
+    public bool WrapMemory { get; init; } = true;
     
     /// <summary>
     /// The name of the emitted assembly.

@@ -162,6 +162,13 @@ internal sealed class InstructionEmitter
         
         // Add or subtract.
         EmitAddOrSubtract(value);
+
+        // Call rem if wrapping is enabled.
+        if (options.WrapMemory)
+        {
+            il.LoadConstantI4(30_000);
+            il.OpCode(ILOpCode.Rem);
+        }
         
         // Convert the result of the addition/subtraction into a byte.
         il.OpCode(ILOpCode.Conv_u1);
@@ -192,7 +199,7 @@ internal sealed class InstructionEmitter
     {
         il.LoadLocal(MemorySlot);
         il.LoadLocal(DataPointerSlot);
-        
+
         il.Call(readMethod);
         
         // Store value into memory.
