@@ -58,6 +58,11 @@ internal readonly struct EmitPrerequisites
     /// </summary>
     public required MemberReferenceHandle SystemConsoleKeyInfoKeyCharGet { get; init; }
     
+    /// <summary>
+    /// Member reference to the getter of <see cref="ConsoleKeyInfo.Key"/>.
+    /// </summary>
+    public required MemberReferenceHandle SystemConsoleKeyInfoKeyGet { get; init; }
+    
     public static EmitPrerequisites Create(MetadataBuilder metadata)
     {
         var corelib = metadata.AddAssemblyReference(
@@ -89,6 +94,11 @@ internal readonly struct EmitPrerequisites
             corelib,
             "System",
             "ConsoleKeyInfo");
+
+        var systemConsoleKey = metadata.GetType(
+            corelib,
+            "System",
+            "ConsoleKey");
         
         // Create the signature for a parameterless constructor.
         var (parameterlessCtor, systemObjectCtor) = metadata.GetMethod(
@@ -138,6 +148,15 @@ internal readonly struct EmitPrerequisites
                     ret => ret.Type().Char(),
                     _ => {}));
 
+        var (_, systemConsoleKeyInfoKeyGet) = metadata.GetMethod(
+            name: "get_Key",
+            containingType: systemConsoleKeyInfo,
+            isInstanceMethod: true,
+            signature: sig => sig
+                .Parameters(0,
+                    ret => ret.Type().Type(systemConsoleKey, true),
+                    _ => {}));
+
         return new()
         {
             Corelib = corelib,
@@ -149,7 +168,8 @@ internal readonly struct EmitPrerequisites
             SystemConsoleWriteChar = systemConsoleWriteChar,
             SystemConsoleWriteLine = systemConsoleWriteLine,
             SystemConsoleReadKeyBool = systemConsoleReadKeyBool,
-            SystemConsoleKeyInfoKeyCharGet = systemConsoleKeyInfoKeyCharGet
+            SystemConsoleKeyInfoKeyCharGet = systemConsoleKeyInfoKeyCharGet,
+            SystemConsoleKeyInfoKeyGet = systemConsoleKeyInfoKeyGet
         };
     }
 }

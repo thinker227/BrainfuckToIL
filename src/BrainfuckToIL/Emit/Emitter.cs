@@ -204,6 +204,15 @@ public sealed class Emitter
             .Type().Type(prerequisites.SystemConsoleKeyInfo, true);
         const int localSlot = 0;
         
+        /*
+        // Reference source:
+        var info = Console.ReadKey(v);
+        if (info.Key == ConsoleKey.Enter) return 0;
+        return (byte)info.KeyChar;
+        */
+        
+        // Yes this was painful to write, why'd you ask?
+        
         // Load true or false depending on the input format.
         il.LoadConstantI4(options.InputFormat switch
         {
@@ -212,21 +221,32 @@ public sealed class Emitter
             _ => throw new UnreachableException()
         });
         
-        // Call System.Console.ReadKey(bool).
+        // Call System.Console.ReadKey(bool) and store it into a local variable.
         il.Call(prerequisites.SystemConsoleReadKeyBool);
-        
-        // Store key info into local variable.
         il.StoreLocal(localSlot);
+
+        Console.ReadKey();
         
-        // Load address of local variable into order to get KeyChar.
+        if (options.InputFormat == InputFormat.Newline)
+            il.Call(prerequisites.SystemConsoleWriteLine);
+
+        // Define a label and branch to it if the value of info.Key is not ConsoleKey.Enter.
         il.LoadLocalAddress(localSlot);
+        il.Call(prerequisites.SystemConsoleKeyInfoKeyGet);
+        il.LoadConstantI4((int)ConsoleKey.Enter);
+        var label = il.DefineLabel();
+        il.Branch(ILOpCode.Bne_un_s, label);
         
-        // Get the KeyChar.
+        // Return 0.
+        il.LoadConstantI4(0);
+        il.OpCode(ILOpCode.Ret);
+        
+        il.MarkLabel(label);
+        
+        // Return info.KeyChar.
+        il.LoadLocalAddress(localSlot);
         il.Call(prerequisites.SystemConsoleKeyInfoKeyCharGet);
-        
-        // Convert the character to a byte.
         il.OpCode(ILOpCode.Conv_u1);
-        
         il.OpCode(ILOpCode.Ret);
         
         var bodyOffset = methodBodyStream.AddMethodBody(
