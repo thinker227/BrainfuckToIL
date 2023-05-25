@@ -92,6 +92,7 @@ public sealed class Emitter
         CreateModuleAndAssembly();
 
         CreateCtor();
+        // This is order-dependent. why
         var read = CreateRead();
         var main = CreateMain(read);
         
@@ -281,17 +282,18 @@ public sealed class Emitter
         return mainBodyOffset;
     }
 
-    private void CreateModuleType(MethodDefinitionHandle mainMethod) =>
+    private void CreateModuleType(MethodDefinitionHandle methodList) =>
         metadata.AddTypeDefinition(
             attributes: default,
             @namespace: default,
             name: metadata.GetOrAddString("<Module>"),
             baseType: default,
             fieldList: MetadataTokens.FieldDefinitionHandle(1),
-            // No idea why the main method has to be specified in both <Module> and the program type.
-            methodList: mainMethod);
+            // This specifies that the method list is empty because this method list
+            // should refer to the method list of the next type. 
+            methodList: methodList);
 
-    private void CreateProgramType(MethodDefinitionHandle readMethod) =>
+    private void CreateProgramType(MethodDefinitionHandle methodList) =>
         metadata.AddTypeDefinition(
             attributes: TypeAttributes.Class |
                         TypeAttributes.Public |
@@ -301,5 +303,5 @@ public sealed class Emitter
             metadata.GetOrAddString(options.TypeName),
             baseType: prerequisites.SystemObject,
             fieldList: MetadataTokens.FieldDefinitionHandle(1),
-            readMethod);
+            methodList);
 }
