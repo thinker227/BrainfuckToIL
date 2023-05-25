@@ -9,6 +9,12 @@ public readonly struct EmitOptions
     /// The kind of output to emit. Default is <see cref="BrainfuckToIL.Emit.OutputKind.Dll"/>.
     /// </summary>
     public OutputKind OutputKind { get; init; } = OutputKind.Dll;
+
+    /// <summary>
+    /// The method of displaying user input when encountering a <c>,</c> instruction.
+    /// Default is <see cref="BrainfuckToIL.Emit.InputFormat.Newline"/>.
+    /// </summary>
+    public InputFormat InputFormat { get; init; } = InputFormat.Newline;
     
     /// <summary>
     /// The name of the emitted assembly.
