@@ -18,8 +18,15 @@ public readonly struct EmitOptions
 
     /// <summary>
     /// Whether to wrap around the memory if the pointer goes outside the bounds of the memory.
+    /// Default is <see langword="true"/>.
     /// </summary>
     public bool WrapMemory { get; init; } = true;
+
+    /// <summary>
+    /// The size of the memory.
+    /// Default is 30,000.
+    /// </summary>
+    public int MemorySize { get; init; } = 30_000;
     
     /// <summary>
     /// The name of the emitted assembly.

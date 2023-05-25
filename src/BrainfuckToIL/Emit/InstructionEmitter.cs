@@ -14,7 +14,6 @@ internal sealed class InstructionEmitter
     private readonly EmitPrerequisites prerequisites;
     private readonly MethodDefinitionHandle readMethod;
 
-    private const int MemorySize = 30_000;
     private const int MemorySlot = 0;
     private const int DataPointerSlot = 1;
 
@@ -70,15 +69,15 @@ internal sealed class InstructionEmitter
             elementType => elementType.Byte(),
             shape => shape.Shape(
                 1,
-                // The array will always contain 30000 elements.
+                // The array will always contain the same amount of elements.
                 ImmutableArray.Create(1),
-                ImmutableArray.Create(MemorySize)));
+                ImmutableArray.Create(options.MemorySize)));
         
         // Add an int variable.
         locals.AddVariable().Type().Int32();
         
-        // Create an array of 30,000 bytes and store it into a local variable. 
-        il.LoadConstantI4(MemorySize);
+        // Create an array of bytes and store it into a local variable. 
+        il.LoadConstantI4(options.MemorySize);
         il.OpCode(ILOpCode.Newarr);
         il.Token(prerequisites.SystemByte);
         il.StoreLocal(MemorySlot);
@@ -166,7 +165,7 @@ internal sealed class InstructionEmitter
         // Call rem if wrapping is enabled.
         if (options.WrapMemory)
         {
-            il.LoadConstantI4(30_000);
+            il.LoadConstantI4(options.MemorySize);
             il.OpCode(ILOpCode.Rem);
         }
         
