@@ -10,7 +10,12 @@ internal sealed class Compile
 
     public Compile(IAnsiConsole console) => this.console = console;
 
-    public int Handle(FileInfo sourceFile, FileSystemInfo? destination, DisplayOutputKind outputKind, int memorySize)
+    public int Handle(
+        FileInfo sourceFile,
+        FileSystemInfo? destination,
+        DisplayOutputKind outputKind,
+        int memorySize,
+        bool noWrap)
     {
         var outputFile = Files.GetOrCreateOutputFile(sourceFile, destination, outputKind);
         var outputFileName = Path.GetFileNameWithoutExtension(outputFile.Name);
@@ -32,7 +37,8 @@ internal sealed class Compile
         {
             AssemblyName = outputFileName,
             OutputKind = outputKind.ToCoreOutputKind(),
-            MemorySize = memorySize
+            MemorySize = memorySize,
+            WrapMemory = !noWrap
         });
 
         return 0;

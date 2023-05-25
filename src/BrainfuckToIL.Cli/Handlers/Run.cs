@@ -11,7 +11,10 @@ internal sealed class Run
 
     public Run(IAnsiConsole console) => this.console = console;
 
-    public int Handle(FileInfo sourceFile, int memorySize)
+    public int Handle(
+        FileInfo sourceFile,
+        int memorySize,
+        bool noWrap)
     {
         var sourceFileName = Path.GetFileNameWithoutExtension(sourceFile.Name);
     
@@ -30,7 +33,8 @@ internal sealed class Run
         {
             AssemblyName = sourceFileName,
             OutputKind = OutputKind.Dll,
-            MemorySize = memorySize
+            MemorySize = memorySize,
+            WrapMemory = !noWrap
         });
         var bytes = stream.ToArray();
 

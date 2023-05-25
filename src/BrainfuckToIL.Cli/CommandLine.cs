@@ -57,6 +57,14 @@ internal static class CommandLine
         memorySizeOption.AddValidator(MemorySizeValidator);
         rootCommand.AddGlobalOption(memorySizeOption);
 
+        var noWrapOption = new Option<bool>("--no-wrap")
+        {
+            Description = "Whether to disable memory wrapping, " +
+                          "i.e. that memory below cell 0 wraps around to the maximum cell " +
+                          "and that memory above the maximum cell wraps around to cell 0."
+        };
+        rootCommand.AddGlobalOption(noWrapOption);
+
         var compileCommand = CompileCommand();
         rootCommand.AddCommand(compileCommand);
 
@@ -121,7 +129,8 @@ internal static class CommandLine
                 ctx.ParseResult.GetValueForArgument(sourceArgument),
                 ctx.ParseResult.GetValueForArgument(outputArgument),
                 ctx.ParseResult.GetValueForOption(outputKindOption),
-                ctx.ParseResult.GetValueForOptionWithName<int>("memory-size"));
+                ctx.ParseResult.GetValueForOptionWithName<int>("memory-size"),
+                ctx.ParseResult.GetValueForOptionWithName<bool>("no-wrap"));
         });
 
         return command;
@@ -149,7 +158,8 @@ internal static class CommandLine
             
             ctx.ExitCode = handler.Handle(
                 ctx.ParseResult.GetValueForArgument(sourceArgument),
-                ctx.ParseResult.GetValueForOptionWithName<int>("memory-size"));
+                ctx.ParseResult.GetValueForOptionWithName<int>("memory-size"),
+                ctx.ParseResult.GetValueForOptionWithName<bool>("no-wrap"));
         });
 
         return command;
