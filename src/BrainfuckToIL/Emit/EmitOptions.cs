@@ -42,9 +42,3 @@ public readonly struct EmitOptions
     
     public EmitOptions() {}
 }
-
-public enum OutputKind
-{
-    Executable,
-    Dll
-}
