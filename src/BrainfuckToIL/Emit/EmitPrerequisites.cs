@@ -60,83 +60,71 @@ internal readonly struct EmitPrerequisites
             flags: default,
             hashValue: default);
         
-        var systemObject = metadata.AddTypeReference(
+        var systemObject = metadata.GetType(
             corelib,
-            metadata.GetOrAddString("System"),
-            metadata.GetOrAddString("Object"));
+            "System",
+            "Object");
         
-        var systemByte = metadata.AddTypeReference(
+        var systemByte = metadata.GetType(
             corelib,
-            metadata.GetOrAddString("System"),
-            metadata.GetOrAddString("Byte"));
+            "System",
+            "Byte");
 
-        var systemConsole = metadata.AddTypeReference(
+        var systemConsole = metadata.GetType(
             corelib,
-            metadata.GetOrAddString("System"),
-            metadata.GetOrAddString("Console"));
+            "System",
+            "Console");
 
-        var systemConsoleKeyInfo = metadata.AddTypeReference(
+        var systemConsoleKeyInfo = metadata.GetType(
             corelib,
-            metadata.GetOrAddString("System"),
-            metadata.GetOrAddString("ConsoleKeyInfo"));
+            "System",
+            "ConsoleKeyInfo");
         
         // Create the signature for a parameterless constructor.
-        var voidNoArgsSignature = new BlobBuilder();
-        new BlobEncoder(voidNoArgsSignature)
-            .MethodSignature(isInstanceMethod: true)
-            .Parameters(0, 
-                ret => ret.Void(),
-                _ => {});
+        var (parameterlessCtor, systemObjectCtor) = metadata.GetMethod(
+            name: ".ctor",
+            containingType: systemObject,
+            isInstanceMethod: true,
+            signature: sig => sig
+                .Parameters(0,
+                    ret => ret.Void(),
+                    _ => { }));
 
-        var systemObjectCtor = metadata.AddMemberReference(
-            systemObject,
-            metadata.GetOrAddString(".ctor"),
-            metadata.GetOrAddBlob(voidNoArgsSignature));
+        var (_, systemConsoleWriteChar) = metadata.GetMethod(
+            name: "Write",
+            containingType: systemConsole,
+            isInstanceMethod: false,
+            signature: sig => sig
+                .Parameters(1,
+                    ret => ret.Void(),
+                    parameters => parameters.AddParameter().Type().Char()));
 
-        var systemConsoleWriteCharSignature = new BlobBuilder();
-        new BlobEncoder(systemConsoleWriteCharSignature)
-            .MethodSignature(isInstanceMethod: false)
-            .Parameters(1,
-                ret => ret.Void(),
-                parameters => parameters.AddParameter().Type().Char());
+        var (_, systemConsoleWriteLine) = metadata.GetMethod(
+            name: "WriteLine",
+            containingType: systemConsole,
+            isInstanceMethod: false,
+            signature: sig => sig
+                .Parameters(0,
+                    ret => ret.Void(),
+                    _ => {}));
 
-        var systemConsoleWriteChar = metadata.AddMemberReference(
-            systemConsole,
-            metadata.GetOrAddString("Write"),
-            metadata.GetOrAddBlob(systemConsoleWriteCharSignature));
-
-        var systemConsoleWriteLineSignature = new BlobBuilder();
-        new BlobEncoder(systemConsoleWriteLineSignature)
-            .MethodSignature(isInstanceMethod: false)
-            .Parameters(0,
-                ret => ret.Void(),
-                _ => {});
-
-        var systemConsoleWriteLine = metadata.AddMemberReference(
-            systemConsole,
-            metadata.GetOrAddString("WriteLine"),
-            metadata.GetOrAddBlob(systemConsoleWriteCharSignature));
-
-        var systemConsoleReadKeyBoolSignature = new BlobBuilder();
-        new BlobEncoder(systemConsoleReadKeyBoolSignature)
-            .MethodSignature(isInstanceMethod: false)
-            .Parameters(0,
-                ret => ret.Type().Type(
-                    systemConsoleKeyInfo,
-                    isValueType: true),
-                parameters => parameters.AddParameter().Type().Boolean());
-
-        var systemConsoleReadKeyBool = metadata.AddMemberReference(
-            systemConsoleKeyInfo,
-            metadata.GetOrAddString("ReadKey"),
-            metadata.GetOrAddBlob(systemConsoleReadKeyBoolSignature));
+        var (_, systemConsoleReadKeyBool) = metadata.GetMethod(
+            name: "ReadKey",
+            containingType: systemConsole,
+            isInstanceMethod: false,
+            signature: sig => sig
+                .Parameters(0,
+                    ret => ret.Type().Type(
+                        systemConsoleKeyInfo,
+                        isValueType: true),
+                    parameters => parameters.AddParameter().Type().Boolean()));
 
         return new()
         {
             Corelib = corelib,
             SystemObject = systemObject,
             SystemByte = systemByte,
-            ParameterlessCtor = metadata.GetOrAddBlob(voidNoArgsSignature),
+            ParameterlessCtor = parameterlessCtor,
             SystemObjectCtor = systemObjectCtor,
             SystemConsoleWriteChar = systemConsoleWriteChar,
             SystemConsoleWriteLine = systemConsoleWriteLine,
