@@ -23,6 +23,26 @@ internal static class MetadataBuilderExtensions
             metadata.GetOrAddString(name));
 
     /// <summary>
+    /// Creates a method signature.
+    /// </summary>
+    /// <param name="metadata">The metadata builder.</param>
+    /// <param name="isInstanceMethod">Whether the method is an instance method or a static method.</param>
+    /// <param name="signature">An action to configure the signature of the method.</param>
+    public static BlobHandle CreateSignature(
+        this MetadataBuilder metadata,
+        bool isInstanceMethod,
+        Action<MethodSignatureEncoder> signature)
+    {
+        var signatureBuilder = new BlobBuilder();
+        var signatureEncoder = new BlobEncoder(signatureBuilder)
+            .MethodSignature(isInstanceMethod: isInstanceMethod);
+        signature(signatureEncoder);
+        var signatureBlob = metadata.GetOrAddBlob(signatureBuilder);
+
+        return signatureBlob;
+    }
+    
+    /// <summary>
     /// Gets a method signature and handle from metadata. 
     /// </summary>
     /// <param name="metadata">The metadata builder.</param>
@@ -38,11 +58,7 @@ internal static class MetadataBuilderExtensions
         Action<MethodSignatureEncoder> signature
     )
     {
-        var signatureBuilder = new BlobBuilder();
-        var signatureEncoder = new BlobEncoder(signatureBuilder)
-            .MethodSignature(isInstanceMethod: isInstanceMethod);
-        signature(signatureEncoder);
-        var signatureBlob = metadata.GetOrAddBlob(signatureBuilder);
+        var signatureBlob = metadata.CreateSignature(isInstanceMethod, signature);
 
         var method = metadata.AddMemberReference(
             containingType,
