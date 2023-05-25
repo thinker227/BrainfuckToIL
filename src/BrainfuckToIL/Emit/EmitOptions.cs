@@ -6,7 +6,7 @@
 public readonly struct EmitOptions
 {
     /// <summary>
-    /// The kind of output to emit. Default is <see cref="BrainfuckToIL.OutputKind.Dll"/>.
+    /// The kind of output to emit. Default is <see cref="BrainfuckToIL.Emit.OutputKind.Dll"/>.
     /// </summary>
     public OutputKind OutputKind { get; init; } = OutputKind.Dll;
     
