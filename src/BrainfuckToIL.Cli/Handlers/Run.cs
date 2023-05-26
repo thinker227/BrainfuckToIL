@@ -28,7 +28,7 @@ internal sealed class Run
             return 1;
         }
 
-        var main = Emitter.EmitAsAction(result.Instructions, new EmitOptions()
+        var main = Emitter.EmitAsDelegate(result.Instructions, new EmitOptions()
         {
             AssemblyName = sourceFileName,
             OutputKind = OutputKind.Dll,

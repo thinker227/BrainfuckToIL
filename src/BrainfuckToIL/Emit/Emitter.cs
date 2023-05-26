@@ -88,20 +88,20 @@ public sealed class Emitter
     }
 
     /// <summary>
-    /// Emits a list of instructions as an <see cref="Action"/>.
+    /// Emits a list of instructions as a <see cref="BrainfuckMethod"/> delegate.
     /// </summary>
     /// <param name="instructions">The instructions to emit.</param>
     /// <param name="options">The options to use for emission.</param>
-    /// <returns>An <see cref="Action"/> which calls the entry-point of an assembly constructed
+    /// <returns>A <see cref="BrainfuckMethod"/> delegate which calls the entry-point of an assembly constructed
     /// from the IL emitted using <paramref name="instructions"/>.</returns>
-    public static Action EmitAsAction(
+    public static BrainfuckMethod EmitAsDelegate(
         IReadOnlyList<Instruction> instructions,
         EmitOptions options)
     {
         var assembly = EmitAsAssembly(instructions, options);
         var entryPoint = assembly.EntryPoint ?? throw new InvalidOperationException(
             $"Assembly {assembly.FullName} does not have an entry point.");
-        return entryPoint.CreateDelegate<Action>();
+        return entryPoint.CreateDelegate<BrainfuckMethod>();
     }
 
     private void WritePeImage(
