@@ -29,6 +29,11 @@ public readonly struct EmitOptions
     public int MemorySize { get; init; } = 30_000;
     
     /// <summary>
+    /// The mode to use for reading user input.
+    /// </summary>
+    public InputMode InputMode { get; init; } = InputMode.Key;
+    
+    /// <summary>
     /// The name of the emitted assembly.
     /// </summary>
     public required string AssemblyName { get; init; }

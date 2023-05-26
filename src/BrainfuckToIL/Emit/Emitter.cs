@@ -246,6 +246,28 @@ public sealed class Emitter
         var localsBuilder = new BlobBuilder();
         var locals = new BlobEncoder(localsBuilder).LocalVariableSignature(1);
 
+        switch (options.InputMode)
+        {
+        case InputMode.Key:
+            EmitReadKey(il, locals);
+            break;
+        
+        case InputMode.Stream:
+            EmitReadStream(il);
+            break;
+        
+        default:
+            throw new UnreachableException();
+        }
+        
+        var bodyOffset = methodBodyStream.AddMethodBody(
+            il, localVariablesSignature: metadata.AddStandaloneSignature(metadata.GetOrAddBlob(localsBuilder)));
+
+        return bodyOffset;
+    }
+
+    private void EmitReadKey(InstructionEncoder il, LocalVariablesEncoder locals)
+    {
         locals.AddVariable()
             .Type().Type(prerequisites.SystemConsoleKeyInfo, true);
         const int localSlot = 0;
@@ -294,13 +316,15 @@ public sealed class Emitter
 
         il.OpCode(ILOpCode.Conv_u1);
         il.OpCode(ILOpCode.Ret);
-        
-        var bodyOffset = methodBodyStream.AddMethodBody(
-            il, localVariablesSignature: metadata.AddStandaloneSignature(metadata.GetOrAddBlob(localsBuilder)));
-
-        return bodyOffset;
     }
 
+    private void EmitReadStream(InstructionEncoder il)
+    {
+        il.Call(prerequisites.SystemConsoleRead);
+        il.OpCode(ILOpCode.Conv_u1);
+        il.OpCode(ILOpCode.Ret);
+    }
+    
     private MethodDefinitionHandle CreateMain(MethodDefinitionHandle read)
     {
         // Create the signature for the main method.

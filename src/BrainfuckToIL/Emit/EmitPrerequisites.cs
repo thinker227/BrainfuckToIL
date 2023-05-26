@@ -49,6 +49,11 @@ internal readonly struct EmitPrerequisites
     public required MemberReferenceHandle SystemConsoleReadKeyBool { get; init; }
     
     /// <summary>
+    /// Member reference to <see cref="Console.Read()"/>.
+    /// </summary>
+    public required MemberReferenceHandle SystemConsoleRead { get; init; }
+    
+    /// <summary>
     /// Member reference to <see cref="Console.WriteLine()"/>.
     /// </summary>
     public required MemberReferenceHandle SystemConsoleWriteLine { get; init; }
@@ -139,6 +144,15 @@ internal readonly struct EmitPrerequisites
                         isValueType: true),
                     parameters => parameters.AddParameter().Type().Boolean()));
 
+        var (_, systemConsoleRead) = metadata.GetMethod(
+            name: "Read",
+            containingType: systemConsole,
+            isInstanceMethod: false,
+            signature: sig => sig
+                .Parameters(0,
+                    ret => ret.Type().Int32(),
+                    _ => {}));
+
         var (_, systemConsoleKeyInfoKeyCharGet) = metadata.GetMethod(
             name: "get_KeyChar",
             containingType: systemConsoleKeyInfo,
@@ -168,6 +182,7 @@ internal readonly struct EmitPrerequisites
             SystemConsoleWriteChar = systemConsoleWriteChar,
             SystemConsoleWriteLine = systemConsoleWriteLine,
             SystemConsoleReadKeyBool = systemConsoleReadKeyBool,
+            SystemConsoleRead = systemConsoleRead,
             SystemConsoleKeyInfoKeyCharGet = systemConsoleKeyInfoKeyCharGet,
             SystemConsoleKeyInfoKeyGet = systemConsoleKeyInfoKeyGet
         };
