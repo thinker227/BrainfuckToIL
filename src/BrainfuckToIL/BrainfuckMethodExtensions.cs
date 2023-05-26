@@ -19,7 +19,7 @@ public static class BrainfuckMethodExtensions
     /// </remarks>
     public static BrainfuckMethod UseInputRedirection(
         this BrainfuckMethod method,
-        IEnumerable<char> input) => () =>
+        string input) => () =>
     {
         var original = Console.In;
         
@@ -29,6 +29,27 @@ public static class BrainfuckMethodExtensions
         method();
         
         Console.SetIn(original);
+    };
+
+    /// <summary>
+    /// Takes an existing <see cref="BrainfuckMethod"/> and returns a <see cref="BrainfuckMethod{T}"/>
+    /// which redirects output and returns it as a string.
+    /// </summary>
+    /// <param name="method">The existing method.</param>
+    /// <returns>A <see cref="BrainfuckMethod{T}"/> which returns the output of the program as a string.</returns>
+    public static BrainfuckMethod<string> UseOutputRedirection(
+        this BrainfuckMethod method) => () =>
+    {
+        var original = Console.Out;
+
+        var writer = new StringWriter();
+        Console.SetOut(writer);
+
+        method();
+        
+        Console.SetOut(original);
+
+        return writer.ToString();
     };
 
     private sealed class NullTerminatedCharReader : TextReader
