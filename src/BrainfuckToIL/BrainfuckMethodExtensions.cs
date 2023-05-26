@@ -23,7 +23,7 @@ public static class BrainfuckMethodExtensions
     {
         var original = Console.In;
         
-        var redirect = new InputRedirect(input);
+        var redirect = new NullTerminatedCharReader(input);
         Console.SetIn(redirect);
 
         method();
@@ -31,11 +31,11 @@ public static class BrainfuckMethodExtensions
         Console.SetIn(original);
     };
 
-    private sealed class InputRedirect : TextReader
+    private sealed class NullTerminatedCharReader : TextReader
     {
         private readonly IEnumerator<char> input;
 
-        public InputRedirect(IEnumerable<char> input) =>
+        public NullTerminatedCharReader(IEnumerable<char> input) =>
             this.input = input.GetEnumerator();
 
         public override int Read() =>
