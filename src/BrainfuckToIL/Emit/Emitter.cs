@@ -37,10 +37,10 @@ public sealed class Emitter
     }
 
     /// <summary>
-    /// Emits a list of instructions into a stream as IL.
+    /// Emits a list of instructions as IL into a stream.
     /// </summary>
     /// <param name="instructions">The instructions to emit.</param>
-    /// <param name="stream">The stream to emit the instruction into.</param>
+    /// <param name="stream">The stream to emit the instructions into.</param>
     /// <param name="options">The options to use for emission.</param>
     public static void Emit(
         IReadOnlyList<Instruction> instructions,
@@ -56,6 +56,52 @@ public sealed class Emitter
         var entryPoint = emitter.EmitEntryPoint();
 
         emitter.WritePeImage(stream, entryPoint);
+    }
+
+    /// <summary>
+    /// Emits a list of instructions as a byte array of IL instructions.
+    /// </summary>
+    /// <param name="instructions">The instructions to emit.</param>
+    /// <param name="options">The options to use for emission.</param>
+    /// <returns>A byte of IL instructions emitted using <paramref name="instructions"/>.</returns>
+    public static byte[] EmitAsBytes(
+        IReadOnlyList<Instruction> instructions,
+        EmitOptions options)
+    {
+        var stream = new MemoryStream();
+        Emit(instructions, stream, options);
+        return stream.ToArray();
+    }
+
+    /// <summary>
+    /// Emits a list of instructions as an assembly.
+    /// </summary>
+    /// <param name="instructions">The instructions to emit.</param>
+    /// <param name="options">The options to use for emission.</param>
+    /// <returns>An assembly constructed from the IL emitted using <paramref name="instructions"/>.</returns>
+    public static Assembly EmitAsAssembly(
+        IReadOnlyList<Instruction> instructions,
+        EmitOptions options)
+    {
+        var bytes = EmitAsBytes(instructions, options);
+        return Assembly.Load(bytes);
+    }
+
+    /// <summary>
+    /// Emits a list of instructions as an <see cref="Action"/>.
+    /// </summary>
+    /// <param name="instructions">The instructions to emit.</param>
+    /// <param name="options">The options to use for emission.</param>
+    /// <returns>An <see cref="Action"/> which calls the entry-point of an assembly constructed
+    /// from the IL emitted using <paramref name="instructions"/>.</returns>
+    public static Action EmitAsAction(
+        IReadOnlyList<Instruction> instructions,
+        EmitOptions options)
+    {
+        var assembly = EmitAsAssembly(instructions, options);
+        var entryPoint = assembly.EntryPoint ?? throw new InvalidOperationException(
+            $"Assembly {assembly.FullName} does not have an entry point.");
+        return entryPoint.CreateDelegate<Action>();
     }
 
     private void WritePeImage(

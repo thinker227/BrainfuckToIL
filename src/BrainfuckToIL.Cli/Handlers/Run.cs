@@ -27,21 +27,14 @@ internal sealed class Run
             console.WriteErrors(errors, source);
             return 1;
         }
-        
-        var stream = new MemoryStream();
-        Emitter.Emit(result.Instructions, stream, new EmitOptions()
+
+        var main = Emitter.EmitAsAction(result.Instructions, new EmitOptions()
         {
             AssemblyName = sourceFileName,
             OutputKind = OutputKind.Dll,
             MemorySize = memorySize,
             WrapMemory = !noWrap
         });
-        var bytes = stream.ToArray();
-
-        var assembly = Assembly.Load(bytes);
-        var entryPoint = assembly.EntryPoint ?? throw new InvalidOperationException(
-            $"Assembly {assembly.FullName} does not have an entry point.");
-        var main = entryPoint.CreateDelegate<Action>();
     
         main();
         
