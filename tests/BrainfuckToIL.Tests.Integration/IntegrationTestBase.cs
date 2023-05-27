@@ -40,10 +40,10 @@ public abstract class IntegrationTestBase
         var emitOptions = configureEmitOptions?.Invoke(baseEmitOptions) ?? baseEmitOptions;
         
         var main = Emitter.EmitAsDelegate(result.Instructions, emitOptions)
-            .UseInputRedirection(input)
+            .UseInputRedirection()
             .UseOutputRedirection();
         
-        var output = main();
+        var output = main(input);
 
         return output;
     }
