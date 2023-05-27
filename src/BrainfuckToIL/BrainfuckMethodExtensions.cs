@@ -10,7 +10,7 @@ public static class BrainfuckMethodExtensions
     /// </summary>
     /// <param name="method">The existing method.</param>
     /// <returns>
-    /// A <see cref="BrainfuckMethod{TIn}"/> which takes a <see cref="string"/> as an argument
+    /// A <see cref="BrainfuckMethod{TIn}"/> which takes a sequence of characters as an argument
     /// and uses it as the input for the program.
     /// The input is read lazily as the program requests user input.
     /// If input is requested after the entire string has been read, then 0 will be returned.
@@ -20,7 +20,7 @@ public static class BrainfuckMethodExtensions
     /// using <see cref="Emitter.EmitAsDelegate"/> with <see cref="EmitOptions.InputMode"/>
     /// set to <see cref="InputMode.Stream"/>.
     /// </remarks>
-    public static BrainfuckMethod<string> UseInputRedirection(
+    public static BrainfuckMethod<IEnumerable<char>> UseInputRedirection(
         this BrainfuckMethod method) => input =>
     {
         var original = Console.In;
@@ -40,7 +40,7 @@ public static class BrainfuckMethodExtensions
     /// <param name="function">The existing function.</param>
     /// <typeparam name="TOut">The type of the output of the program.</typeparam>
     /// <returns>
-    /// A <see cref="BrainfuckFunction{TIn, TOut}"/> which takes a <see cref="string"/> as an argument
+    /// A <see cref="BrainfuckFunction{TIn, TOut}"/> which takes a sequence of characters as an argument
     /// and uses it as the input for the program.
     /// The input is read lazily as the program requests user input.
     /// If input is requested after the entire string has been read, then 0 will be returned.
@@ -50,7 +50,7 @@ public static class BrainfuckMethodExtensions
     /// using <see cref="Emitter.EmitAsDelegate"/> with <see cref="EmitOptions.InputMode"/>
     /// set to <see cref="InputMode.Stream"/>.
     /// </remarks>
-    public static BrainfuckFunction<string, TOut> UseInputRedirection<TOut>(
+    public static BrainfuckFunction<IEnumerable<char>, TOut> UseInputRedirection<TOut>(
         this BrainfuckFunction<TOut> function) => input =>
     {
         var original = Console.In;
