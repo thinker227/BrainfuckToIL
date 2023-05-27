@@ -244,7 +244,12 @@ public sealed class Emitter
         var il = new InstructionEncoder(codeBuilder, flowBuilder);
 
         var localsBuilder = new BlobBuilder();
-        var locals = new BlobEncoder(localsBuilder).LocalVariableSignature(1);
+        var locals = new BlobEncoder(localsBuilder).LocalVariableSignature(options.InputMode switch
+        {
+            InputMode.Key => 1,
+            InputMode.Stream => 0,
+            _ => throw new UnreachableException()
+        });
 
         switch (options.InputMode)
         {
