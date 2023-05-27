@@ -14,7 +14,8 @@ internal sealed class Run
     public int Handle(
         FileInfo sourceFile,
         int memorySize,
-        bool noWrap)
+        bool noWrap,
+        string? input)
     {
         var sourceFileName = Path.GetFileNameWithoutExtension(sourceFile.Name);
     
@@ -33,11 +34,21 @@ internal sealed class Run
             AssemblyName = sourceFileName,
             OutputKind = OutputKind.Dll,
             MemorySize = memorySize,
-            WrapMemory = !noWrap
+            WrapMemory = !noWrap,
+            InputMode = input is null
+                ? InputMode.Key
+                : InputMode.Stream
         });
-    
-        main();
         
+        if (input is null)
+        {
+            main();
+        }
+        else
+        {
+            main.UseInputRedirection()(input);
+        }
+
         return 0;
     }
 }

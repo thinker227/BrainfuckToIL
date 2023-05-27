@@ -150,6 +150,16 @@ internal static class CommandLine
         sourceArgument.LegalFilePathsOnly();
         sourceArgument.ExistingOnly();
         command.AddArgument(sourceArgument);
+
+        var inputOption = new Option<string?>("--input")
+        {
+            Description = "If specified, the program will read from this value " +
+                          "when encountering a , instruction rather than using input from the console. " +
+                          "If a , instruction is encountered after the entire input has already been read, " +
+                          "0 will always be returned."
+        };
+        inputOption.SetDefaultValue(null);
+        command.AddOption(inputOption);
         
         command.SetHandler(ctx =>
         {
@@ -159,7 +169,8 @@ internal static class CommandLine
             ctx.ExitCode = handler.Handle(
                 ctx.ParseResult.GetValueForArgument(sourceArgument),
                 ctx.ParseResult.GetValueForOptionWithName<int>("memory-size"),
-                ctx.ParseResult.GetValueForOptionWithName<bool>("no-wrap"));
+                ctx.ParseResult.GetValueForOptionWithName<bool>("no-wrap"),
+                ctx.ParseResult.GetValueForOption(inputOption));
         });
 
         return command;
