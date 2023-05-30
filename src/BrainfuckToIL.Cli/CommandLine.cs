@@ -13,13 +13,13 @@ internal static class CommandLine
     /// <param name="rawArgs">The raw arguments passed to the program.</param>
     public static CommandLineParser GetParser(string[] rawArgs) =>
         GetDefaultBuilder(Commands.Root.Command)
-            .AddMiddleware(DefaultCommandMiddleware(rawArgs))
+            .UseDefaultCommand(rawArgs, Commands.Compile.Command)
             .Build();
 
     /// <summary>
     /// Gets the default <see cref="CommandLineBuilder"/>.
     /// </summary>
-    private static CommandLineBuilder GetDefaultBuilder(Command rootCommand) =>
+    public static CommandLineBuilder GetDefaultBuilder(Command rootCommand) =>
         new CommandLineBuilder(rootCommand)
             .UseDefaults()
             .UseHelpBuilder(_ => new Help())
@@ -43,22 +43,4 @@ internal static class CommandLine
         ctx.Console = new SpectreConsoleConsole(console);
         ctx.BindingContext.AddService(_ => console);
     }
-
-    /// <summary>
-    /// Middleware which invokes compile if no other command is specified.
-    /// </summary>
-    private static Action<InvocationContext> DefaultCommandMiddleware(string[] rawArgs) => ctx =>
-    {
-        // If this is not the root command that is invoked then don't do anything.
-        if (ctx.ParseResult.CommandResult.Command != ctx.ParseResult.RootCommandResult.Command) return;
-
-        var command = Commands.Compile.Command;
-        var builder = GetDefaultBuilder(command);
-        var parser = builder.Build();
-        
-        var result = parser.Parse(rawArgs);
-
-        // Override the parse result with the new one.
-        ctx.ParseResult = result;
-    };
 }
