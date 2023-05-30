@@ -22,6 +22,7 @@ internal static class CommandLine
     private static CommandLineBuilder GetDefaultBuilder(Command rootCommand) =>
         new CommandLineBuilder(rootCommand)
             .UseDefaults()
+            .UseHelpBuilder(_ => new Help())
             .AddMiddleware(PlainOutputMiddleware, MiddlewareOrder.Configuration);
 
     /// <summary>
