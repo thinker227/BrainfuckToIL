@@ -9,17 +9,14 @@ namespace BrainfuckToIL.Cli;
 
 internal static class CommandLine
 {
-    public static CommandLineParser GetParser()
-    {
-        var rootCommand = GetRootCommand();
-        var builder = new CommandLineBuilder(rootCommand);
+    public static CommandLineParser GetParser() =>
+        GetDefaultBuilder(GetRootCommand())
+            .Build();
 
-        builder.UseDefaults();
-        
-        builder.AddMiddleware(PlainOutputMiddleware, MiddlewareOrder.Configuration);
-        
-        return builder.Build();
-    }
+    private static CommandLineBuilder GetDefaultBuilder(Command rootCommand) =>
+        new CommandLineBuilder(rootCommand)
+            .UseDefaults()
+            .AddMiddleware(PlainOutputMiddleware, MiddlewareOrder.Configuration);
 
     private static RootCommand GetRootCommand()
     {
