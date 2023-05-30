@@ -9,11 +9,18 @@ namespace BrainfuckToIL.Cli;
 
 internal static class CommandLine
 {
+    /// <summary>
+    /// Gets the <see cref="CommandLineParser"/> which parses the command line.
+    /// </summary>
+    /// <param name="rawArgs">The raw arguments passed to the program.</param>
     public static CommandLineParser GetParser(string[] rawArgs) =>
         GetDefaultBuilder(GetRootCommand())
             .AddMiddleware(DefaultCommandMiddleware(rawArgs))
             .Build();
 
+    /// <summary>
+    /// Gets the default <see cref="CommandLineBuilder"/>.
+    /// </summary>
     private static CommandLineBuilder GetDefaultBuilder(Command rootCommand) =>
         new CommandLineBuilder(rootCommand)
             .UseDefaults()
@@ -178,6 +185,10 @@ internal static class CommandLine
         }
     }
 
+    /// <summary>
+    /// Middleware which switches off color output for the <see cref="IAnsiConsole"/>
+    /// used in the program if the --plain option is specified.
+    /// </summary>
     private static void PlainOutputMiddleware(InvocationContext ctx)
     {
         var plain = ctx.ParseResult.GetValueForOptionWithName<bool>("plain");
@@ -193,6 +204,9 @@ internal static class CommandLine
         ctx.BindingContext.AddService(_ => console);
     }
 
+    /// <summary>
+    /// Middleware which invokes compile if no other command is specified.
+    /// </summary>
     private static Action<InvocationContext> DefaultCommandMiddleware(string[] rawArgs) => ctx =>
     {
         // If this is not the root command that is invoked then don't do anything.
