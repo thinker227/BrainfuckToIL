@@ -16,20 +16,7 @@ internal static class CommandLine
 
         builder.UseDefaults();
         
-        builder.AddMiddleware(ctx =>
-        {
-            var plain = ctx.ParseResult.GetValueForOptionWithName<bool>("plain");
-
-            var console = AnsiConsole.Create(new AnsiConsoleSettings()
-            {
-                ColorSystem = plain
-                    ? ColorSystemSupport.NoColors
-                    : ColorSystemSupport.Detect
-            });
-            
-            ctx.Console = new SpectreConsoleConsole(console);
-            ctx.BindingContext.AddService(_ => console);
-        }, MiddlewareOrder.Configuration);
+        builder.AddMiddleware(PlainOutputMiddleware, MiddlewareOrder.Configuration);
         
         return builder.Build();
     }
@@ -191,5 +178,20 @@ internal static class CommandLine
         {
             result.ErrorMessage = "Memory size cannot be less than or equal to 0.";
         }
+    }
+
+    private static void PlainOutputMiddleware(InvocationContext ctx)
+    {
+        var plain = ctx.ParseResult.GetValueForOptionWithName<bool>("plain");
+
+        var console = AnsiConsole.Create(new AnsiConsoleSettings()
+        {
+            ColorSystem = plain
+                ? ColorSystemSupport.NoColors
+                : ColorSystemSupport.Detect
+        });
+            
+        ctx.Console = new SpectreConsoleConsole(console);
+        ctx.BindingContext.AddService(_ => console);
     }
 }
