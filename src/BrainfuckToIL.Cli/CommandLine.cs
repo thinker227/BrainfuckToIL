@@ -9,8 +9,9 @@ namespace BrainfuckToIL.Cli;
 
 internal static class CommandLine
 {
-    public static CommandLineParser GetParser() =>
+    public static CommandLineParser GetParser(string[] rawArgs) =>
         GetDefaultBuilder(GetRootCommand())
+            .AddMiddleware(DefaultCommandMiddleware(rawArgs))
             .Build();
 
     private static CommandLineBuilder GetDefaultBuilder(Command rootCommand) =>
@@ -191,4 +192,19 @@ internal static class CommandLine
         ctx.Console = new SpectreConsoleConsole(console);
         ctx.BindingContext.AddService(_ => console);
     }
+
+    private static Action<InvocationContext> DefaultCommandMiddleware(string[] rawArgs) => ctx =>
+    {
+        // If this is not the root command that is invoked then don't do anything.
+        if (ctx.ParseResult.CommandResult.Command != ctx.ParseResult.RootCommandResult.Command) return;
+
+        var command = CompileCommand();
+        var builder = GetDefaultBuilder(command);
+        var parser = builder.Build();
+        
+        var result = parser.Parse(rawArgs);
+
+        // Override the parse result with the new one.
+        ctx.ParseResult = result;
+    };
 }
