@@ -9,6 +9,7 @@ internal sealed class Help : HelpBuilder
 {
     public Help() : base(LocalizationResources.Instance, Console.WindowWidth) {}
 
+    // This looks ugly but I love it.
     public override void Write(HelpContext context) => ((Action<HelpContext>)(
         context.Command switch
         {
@@ -32,6 +33,7 @@ internal sealed class Help : HelpBuilder
         
         WriteMany("Commands:", TCommand.Subcommands, ctx);
 
+        // Write some additional space at the bottom.
         ctx.Output.WriteLine();
         ctx.Output.WriteLine();
         ctx.Output.WriteLine();
@@ -52,6 +54,7 @@ internal sealed class Help : HelpBuilder
 
     private static Action<HelpBuilder, string?, string?, TextWriter>? writeHeading;
 
+    // Idk why WriteHeading is private but it's too useful not to pull some reflection for.
     private void WriteHeading(string title, string description, HelpContext ctx)
     {
         writeHeading ??= typeof(HelpBuilder).GetMethod(
