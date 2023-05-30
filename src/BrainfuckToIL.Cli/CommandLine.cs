@@ -13,7 +13,7 @@ internal static class CommandLine
     {
         var rootCommand = GetRootCommand();
         var builder = new CommandLineBuilder(rootCommand);
-        
+
         builder.UseDefaults();
         
         builder.AddMiddleware(ctx =>
@@ -48,23 +48,6 @@ internal static class CommandLine
         };
         rootCommand.AddGlobalOption(plainOption);
 
-        var memorySizeOption = new Option<int>("--memory-size")
-        {
-            Description = "The size of the memory in the amount of cells long it is."
-        };
-        memorySizeOption.AddAlias("-m");
-        memorySizeOption.SetDefaultValue(30_000);
-        memorySizeOption.AddValidator(MemorySizeValidator);
-        rootCommand.AddGlobalOption(memorySizeOption);
-
-        var noWrapOption = new Option<bool>("--no-wrap")
-        {
-            Description = "Whether to disable memory wrapping, " +
-                          "i.e. that memory below cell 0 wraps around to the maximum cell " +
-                          "and that memory above the maximum cell wraps around to cell 0."
-        };
-        rootCommand.AddGlobalOption(noWrapOption);
-
         var compileCommand = CompileCommand();
         rootCommand.AddCommand(compileCommand);
 
@@ -72,16 +55,6 @@ internal static class CommandLine
         rootCommand.AddCommand(runCommand);
 
         return rootCommand;
-    }
-
-    private static void MemorySizeValidator(OptionResult result)
-    {
-        var value = result.GetValueOrDefault<int>();
-
-        if (value <= 0)
-        {
-            result.ErrorMessage = "Memory size cannot be less than or equal to 0.";
-        }
     }
 
     private static Command CompileCommand()
@@ -119,6 +92,23 @@ internal static class CommandLine
         outputKindOption.AddAlias("-o");
         outputKindOption.SetDefaultValue(DisplayOutputKind.Exe);
         command.AddOption(outputKindOption);
+
+        var memorySizeOption = new Option<int>("--memory-size")
+        {
+            Description = "The size of the memory in the amount of cells long it is."
+        };
+        memorySizeOption.AddAlias("-m");
+        memorySizeOption.SetDefaultValue(30_000);
+        memorySizeOption.AddValidator(MemorySizeValidator);
+        command.AddOption(memorySizeOption);
+
+        var noWrapOption = new Option<bool>("--no-wrap")
+        {
+            Description = "Whether to disable memory wrapping, " +
+                          "i.e. that memory below cell 0 wraps around to the maximum cell " +
+                          "and that memory above the maximum cell wraps around to cell 0."
+        };
+        command.AddOption(noWrapOption);
         
         command.SetHandler(ctx =>
         {
@@ -129,8 +119,8 @@ internal static class CommandLine
                 ctx.ParseResult.GetValueForArgument(sourceArgument),
                 ctx.ParseResult.GetValueForArgument(outputArgument),
                 ctx.ParseResult.GetValueForOption(outputKindOption),
-                ctx.ParseResult.GetValueForOptionWithName<int>("memory-size"),
-                ctx.ParseResult.GetValueForOptionWithName<bool>("no-wrap"));
+                ctx.ParseResult.GetValueForOption(memorySizeOption),
+                ctx.ParseResult.GetValueForOption(noWrapOption));
         });
 
         return command;
@@ -160,6 +150,23 @@ internal static class CommandLine
         };
         inputOption.SetDefaultValue(null);
         command.AddOption(inputOption);
+
+        var memorySizeOption = new Option<int>("--memory-size")
+        {
+            Description = "The size of the memory in the amount of cells long it is."
+        };
+        memorySizeOption.AddAlias("-m");
+        memorySizeOption.SetDefaultValue(30_000);
+        memorySizeOption.AddValidator(MemorySizeValidator);
+        command.AddOption(memorySizeOption);
+
+        var noWrapOption = new Option<bool>("--no-wrap")
+        {
+            Description = "Whether to disable memory wrapping, " +
+                          "i.e. that memory below cell 0 wraps around to the maximum cell " +
+                          "and that memory above the maximum cell wraps around to cell 0."
+        };
+        command.AddOption(noWrapOption);
         
         command.SetHandler(ctx =>
         {
@@ -168,11 +175,21 @@ internal static class CommandLine
             
             ctx.ExitCode = handler.Handle(
                 ctx.ParseResult.GetValueForArgument(sourceArgument),
-                ctx.ParseResult.GetValueForOptionWithName<int>("memory-size"),
-                ctx.ParseResult.GetValueForOptionWithName<bool>("no-wrap"),
+                ctx.ParseResult.GetValueForOption(memorySizeOption),
+                ctx.ParseResult.GetValueForOption(noWrapOption),
                 ctx.ParseResult.GetValueForOption(inputOption));
         });
 
         return command;
+    }
+
+    private static void MemorySizeValidator(OptionResult result)
+    {
+        var value = result.GetValueOrDefault<int>();
+
+        if (value <= 0)
+        {
+            result.ErrorMessage = "Memory size cannot be less than or equal to 0.";
+        }
     }
 }
