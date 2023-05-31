@@ -35,7 +35,7 @@ A Nuget package is currently not available.
 Compile a Brainfuck file to a .NET executable:
 ```ps1
 # Compile source file
-bftoil compile foo.bf
+bftoil foo.bf
 
 # Run output executable
 ./foo.exe
@@ -44,19 +44,19 @@ bftoil compile foo.bf
 You can alternatively specify whether to output a DLL or exe, of which exe is the default:
 ```ps1
 # Output an exe
-bftoil compile bar.bf -o exe
+bftoil bar.bf -o exe
 
 # Output a DLL
-bftoil compile bar.bf -o dll
+bftoil bar.bf -o dll
 ```
 
 You can also explicitly specify the output file or directory:
 ```ps1
 # Output to baz.exe
-bftoil compile baz.bf baz.exe
+bftoil baz.bf baz.exe
 
 # Output to a subdirectory
-bftoil compile baz.bf output/
+bftoil baz.bf output/
 ```
 
 Run a Brainfuck file without having to compile to an executable file first:
@@ -64,4 +64,4 @@ Run a Brainfuck file without having to compile to an executable file first:
 bftoil run qux.bf
 ```
 
-See the [CLI docs](./cliDocs.md) for a more extensive overview of commands.
+See the [CLI docs](./docs/rootCommand.md) for a more extensive overview of commands.
